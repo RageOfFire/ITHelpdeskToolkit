@@ -62,8 +62,15 @@ def check_google():
     return False, output, "DNS or Internet connectivity problem."
 
 
-def check_route():
-    ok, output = run_command("tracert -d -h 10 8.8.8.8", timeout=30)
+def check_route(max_hops=30):
+    try:
+        max_hops = int(max_hops)
+        if max_hops <= 0:
+            max_hops = 30
+    except (ValueError, TypeError):
+        max_hops = 30
+    timeout = max(30, max_hops * 3)
+    ok, output = run_command(f"tracert -d -h {max_hops} 8.8.8.8", timeout=timeout)
     if ok:
         return True, output, "A route to the Internet was found."
     return False, output, "Routing, firewall, gateway, or Internet connection problem."

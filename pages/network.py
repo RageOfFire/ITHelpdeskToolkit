@@ -29,7 +29,14 @@ class NetworkMixin:
         ttk.Button(
             actions, text="💾 Export Report", command=self.export_network_report,
             style="Action.TButton"
-        ).pack(side="left")
+        ).pack(side="left", padx=(0, 15))
+
+        ttk.Label(actions, text="Tracert Max Hops (-h):").pack(side="left", padx=(0, 4))
+        self.max_hops_var = tk.StringVar(value="30")
+        self.max_hops_spinbox = ttk.Spinbox(
+            actions, from_=1, to=255, textvariable=self.max_hops_var, width=5
+        )
+        self.max_hops_spinbox.pack(side="left")
 
         table_frame = ttk.Frame(self.content)
         table_frame.pack(fill="x", pady=10)
@@ -73,12 +80,25 @@ class NetworkMixin:
         self.network_detail.insert(tk.END, "Running network diagnostics...\n\n")
         for name in NETWORK_TESTS:
             self.network_tree.item(name, values=(name, "TESTING..."), tags=("unknown",))
-        threading.Thread(target=self._network_worker, daemon=True).start()
 
-    def _network_worker(self):
+        try:
+            val = self.max_hops_var.get().strip()
+            max_hops = int(val) if val else 30
+            if max_hops <= 0:
+                max_hops = 30
+        except Exception:
+            max_hops = 30
+            self.max_hops_var.set("30")
+
+        threading.Thread(target=self._network_worker, args=(max_hops,), daemon=True).start()
+
+    def _network_worker(self, max_hops=30):
         for name, function in NETWORK_TESTS.items():
             try:
-                success, output, problem = function()
+                if name == "Route":
+                    success, output, problem = function(max_hops=max_hops)
+                else:
+                    success, output, problem = function()
                 self.network_results[name] = {
                     "success": success, "output": output, "problem": problem
                 }

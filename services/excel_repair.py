@@ -12,7 +12,7 @@ import subprocess
 import tempfile
 import winreg
 
-from .shell import kill_process, run_command
+from .shell import kill_process, run_command, run_powershell
 
 
 def kill_excel():
@@ -224,6 +224,96 @@ def repair_office_quick():
     return run_command(command, timeout=300)
 
 
+def convert_xls_to_xlsx(xls_path, output_path=None):
+    """Convert a single .xls file to .xlsx format using Excel COM via PowerShell
+    or a Python fallback engine.
+    """
+    xls_path = os.path.abspath(xls_path)
+    if not os.path.isfile(xls_path):
+        return False, f"File does not exist: {xls_path}"
+
+    if not xls_path.lower().endswith(".xls"):
+        return False, f"File is not a .xls file: {xls_path}"
+
+    if not output_path:
+        output_path = os.path.splitext(xls_path)[0] + ".xlsx"
+    else:
+        output_path = os.path.abspath(output_path)
+
+    # 1. Try Excel COM automation via PowerShell (best preservation of formatting/formulas)
+    safe_src = xls_path.replace("'", "''")
+    safe_target = output_path.replace("'", "''")
+    ps_script = f"""
+$sourcePath = '{safe_src}'
+$targetPath = '{safe_target}'
+$excel = $null
+try {{
+    $excel = New-Object -ComObject Excel.Application
+    $excel.Visible = $false
+    $excel.DisplayAlerts = $false
+    $wb = $excel.Workbooks.Open($sourcePath)
+    $wb.SaveAs($targetPath, 51)
+    $wb.Close($false)
+    Write-Output "CONVERTED_OK"
+}} catch {{
+    Write-Error $_.Exception.Message
+}} finally {{
+    if ($excel -ne $null) {{
+        $excel.Quit()
+        [System.Runtime.Interopservices.Marshal]::ReleaseComObject($excel) | Out-Null
+    }}
+}}
+"""
+    ok, output = run_powershell(ps_script, timeout=60)
+    if ok and "CONVERTED_OK" in output:
+        return True, f"Successfully converted using Excel engine:\n  From: {xls_path}\n  To:   {output_path}"
+
+    # 2. Try Python fallback using xlrd + openpyxl if available
+    fallback_err = ""
+    try:
+        import openpyxl
+        import xlrd
+        wb_xls = xlrd.open_workbook(xls_path)
+        wb_xlsx = openpyxl.Workbook()
+        wb_xlsx.remove(wb_xlsx.active)  # Remove default sheet
+        for sheet_name in wb_xls.sheet_names():
+            sheet_xls = wb_xls.sheet_by_name(sheet_name)
+            sheet_xlsx = wb_xlsx.create_sheet(title=sheet_name)
+            for row in range(sheet_xls.nrows):
+                sheet_xlsx.append([sheet_xls.cell_value(row, col) for col in range(sheet_xls.ncols)])
+        wb_xlsx.save(output_path)
+        return True, f"Successfully converted using Python fallback engine:\n  From: {xls_path}\n  To:   {output_path}"
+    except Exception as exc:
+        fallback_err = str(exc)
+
+    return False, (
+        f"Failed to convert file.\nExcel COM error: {output}\nPython engine error: {fallback_err}"
+    )
+
+
+def convert_multiple_xls(file_paths):
+    """Convert a list of .xls files to .xlsx format."""
+    results = []
+    success_count = 0
+    fail_count = 0
+
+    for path in file_paths:
+        ok, msg = convert_xls_to_xlsx(path)
+        results.append((path, ok, msg))
+        if ok:
+            success_count += 1
+        else:
+            fail_count += 1
+
+    summary = f"Converted {success_count} file(s) successfully, {fail_count} failed."
+    details = []
+    for path, ok, msg in results:
+        status = "SUCCESS" if ok else "FAILED"
+        details.append(f"[{status}] {os.path.basename(path)}\n{msg}")
+
+    return (success_count > 0 and fail_count == 0), summary, "\n\n".join(details)
+
+
 # (label, description, function, requires_admin)
 EXCEL_FIXES = [
     (
@@ -275,3 +365,4 @@ EXCEL_FIXES = [
         True,
     ),
 ]
+

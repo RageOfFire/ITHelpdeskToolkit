@@ -7,9 +7,9 @@ a bloated recent-files list, and corrupted Office program files.
 
 import threading
 import tkinter as tk
-from tkinter import messagebox, ttk
+from tkinter import filedialog, messagebox, ttk
 
-from services.excel_repair import EXCEL_FIXES, open_excel_safe_mode
+from services.excel_repair import EXCEL_FIXES, convert_multiple_xls, open_excel_safe_mode
 
 
 class ExcelMixin:
@@ -35,9 +35,14 @@ class ExcelMixin:
             style="Action.TButton"
         ).pack(side="left", padx=(0, 8))
         ttk.Button(
+            actions, text="📄 Convert .xls to .xlsx", command=self.convert_xls_to_xlsx_dialog,
+            style="Action.TButton"
+        ).pack(side="left", padx=(0, 8))
+        ttk.Button(
             actions, text="🛟 Open Excel Safe Mode", command=self.launch_excel_safe_mode,
             style="Action.TButton"
         ).pack(side="left")
+
 
         table_frame = ttk.Frame(self.content)
         table_frame.pack(fill="x", pady=10)
@@ -168,3 +173,37 @@ class ExcelMixin:
             self.status_var.set("Excel Safe Mode launch requested.")
         else:
             messagebox.showerror("Excel Safe Mode", f"Could not launch Excel Safe Mode.\n\n{output}")
+
+    def convert_xls_to_xlsx_dialog(self):
+        files = filedialog.askopenfilenames(
+            title="Select .xls file(s) to convert to .xlsx",
+            filetypes=[("Excel 97-2003 Workbook (*.xls)", "*.xls"), ("All Files", "*.*")],
+        )
+        if not files:
+            return
+
+        self.status_var.set(f"Converting {len(files)} .xls file(s) to .xlsx...")
+        self.excel_detail.delete("1.0", tk.END)
+        self.excel_detail.insert(tk.END, f"Starting conversion of {len(files)} .xls file(s)...\n\n")
+
+        def worker():
+            ok, summary, details = convert_multiple_xls(files)
+            self.after(0, lambda: self._on_xls_conversion_done(ok, summary, details))
+
+        threading.Thread(target=worker, daemon=True).start()
+
+    def _on_xls_conversion_done(self, ok, summary, details):
+        self.status_var.set(f"Conversion complete: {summary}")
+        self.excel_detail.delete("1.0", tk.END)
+        self.excel_detail.insert(
+            tk.END,
+            f"File Conversion Results\n{'=' * 60}\n{summary}\n\n{details}"
+        )
+        if ok:
+            messagebox.showinfo("Conversion Complete", summary)
+        else:
+            messagebox.showwarning(
+                "Conversion Finished with Issues",
+                f"{summary}\n\nCheck the Details box for per-file results."
+            )
+
