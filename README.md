@@ -1,4 +1,4 @@
-# IT Helpdesk Toolkit v3.1
+# IT Helpdesk Toolkit v3.1.1
 
 ![GitHub all releases](https://img.shields.io/github/downloads/RageOfFire/ITHelpdeskToolkit/total)
 ![Discord](https://img.shields.io/discord/752171524919918672)
