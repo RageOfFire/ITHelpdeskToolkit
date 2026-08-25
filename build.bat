@@ -2,7 +2,7 @@
 setlocal
 
 echo ==========================================
-echo IT Helpdesk Toolkit v3.0 Build
+echo IT Helpdesk Toolkit v3.1 Build
 echo ==========================================
 
 python -m pip install -r requirements.txt

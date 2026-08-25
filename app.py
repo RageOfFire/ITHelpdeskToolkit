@@ -102,7 +102,7 @@ class HelpdeskToolkit(
         ttk.Separator(self.sidebar).pack(fill="x", pady=14)
         ttk.Label(
             self.sidebar,
-            text="v3.0.0\nWindows Repair Edition",
+            text=f"v{APP_VERSION}\nWindows Repair Edition",
             foreground="#666666",
             justify="center",
         ).pack(pady=8)
