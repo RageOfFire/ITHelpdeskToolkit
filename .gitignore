@@ -1,36 +1,68 @@
-# Byte-compiled / cache
-__pycache__/
-*.py[cod]
-*$py.class
-
-# PyInstaller build output
+# =========================
+# .NET / C# build output
+# =========================
+bin/
+obj/
 build/
 dist/
 scratch/
-*.spec
+out/
+publish/
 
-# Virtual environments
-venv/
-.venv/
-env/
+# =========================
+# Visual Studio
+# =========================
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.userprefs
 
-# Packaging
-*.egg-info/
-.eggs/
-
-# Test / coverage
-.pytest_cache/
-.coverage
-htmlcov/
-
-# Editors / IDEs
-.vscode/
+# =========================
+# Rider / JetBrains
+# =========================
 .idea/
-*.swp
+*.sln.iml
 
+# =========================
+# VS Code
+# =========================
+.vscode/
+
+# =========================
+# NuGet
+# =========================
+*.nupkg
+*.snupkg
+**/[Pp]ackages/*
+!**/[Pp]ackages/build/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# =========================
+# Test results / coverage
+# =========================
+[Tt]est[Rr]esult*/
+*.trx
+*.coverage
+*.coveragexml
+coverage/
+
+# =========================
+# Logs
+# =========================
+*.log
+
+# =========================
 # Windows
+# =========================
 Thumbs.db
 desktop.ini
 
-# Logs
-*.log
+# =========================
+# App-specific
+# =========================
+# Local per-machine settings, if you ever add any (e.g. saved theme choice)
+*.local.json

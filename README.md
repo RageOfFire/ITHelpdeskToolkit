@@ -1,4 +1,4 @@
-# IT Helpdesk Toolkit v3.1.1
+# IT Helpdesk Toolkit
 
 ![GitHub all releases](https://img.shields.io/github/downloads/RageOfFire/ITHelpdeskToolkit/total)
 ![Discord](https://img.shields.io/discord/752171524919918672)
@@ -8,83 +8,121 @@
 ![GitHub Repo stars](https://img.shields.io/github/stars/RageOfFire/ITHelpdeskToolkit)
 
 A single Windows desktop application for common endpoint support tasks —
-one Tkinter app, no per-tool scripts to hunt down.
+one WinForms app, no per-tool scripts to hunt down. Built in C# on .NET 8.
+
+The current version is tracked in one place: [`AppInfo.cs`](AppInfo.cs).
 
 ## Tools included
 
 - **Dashboard** — quick-launch buttons and at-a-glance PC info
-- **Asset Inventory** — hardware, OS, disk and network info; export to CSV/report
-- **Network Diagnostics** — adapter, gateway, DNS, internet and route checks with plain-language "likely problem" output
-- **Network Repair** — DNS flush, DHCP release/renew, Winsock/TCP-IP reset, adapter restart
-- **Windows / File System Repair** — SFC, DISM (check/scan/restore health), CHKDSK, disk health
-- **System Cleanup** — temp files, Prefetch, browser caches, Recycle Bin, Windows Update cleanup
-- **Excel Troubleshooter** — clears lock files, disables crash-causing add-ins, resets the ribbon/toolbar, Office Quick Repair
-- **Application Fixes** — general fixes (Explorer/icon cache/Store apps/fonts/search) plus tools targeting one named app (force-close, clear cache, open data folder, launch as admin)
-- **Printer Troubleshooter** — printer/spooler status, connectivity check, clear stuck jobs, restart spooler
+- **Asset Inventory** — hardware, OS, disk, and network info (including a
+  dedicated Wi-Fi adapter MAC address lookup); export to CSV or a text report
+- **Network Diagnostics** — adapter, gateway, DNS, internet and route checks
+- **Network Repair** — DNS flush, DHCP release/renew, Winsock/TCP-IP reset,
+  adapter restart
+- **Windows / File System Repair** — SFC, DISM (check/scan/restore health),
+  CHKDSK, disk health
+- **System Cleanup** — temp files, Prefetch, browser caches, Recycle Bin,
+  Windows Update cleanup
+- **Excel Troubleshooter** — clears lock files, disables crash-causing
+  add-ins, resets the ribbon/toolbar, Office Quick Repair
+- **Application Fixes** — general fixes (Explorer/icon cache/Store
+  apps/fonts/search) plus tools targeting one named app (force-close, clear
+  cache, open data folder, launch as admin)
+- **Printer Troubleshooter** — printer/spooler status, connectivity check,
+  clear stuck jobs, restart spooler
 - **Password Generator** — configurable random password generation
 
 Most repair actions run in a background thread so the UI stays responsive,
 and elevate via a UAC prompt automatically when administrator rights are
 needed.
 
+## Interface
+
+- **Collapsible sidebar** — toggle it from the `☰` button in the top bar to
+  reclaim horizontal space
+- **Light/Dark theme** — toggle from the top bar; the whole UI rebuilds
+  itself against the new palette immediately
+- Sidebar and content panel use explicit, resize-safe layout rather than
+  relying on WinForms `Dock` resolution alone, so the shell stays correct
+  across window sizes and theme switches
+
 ## Requirements
 
 - Windows 10/11
-- Python 3.10+ for development
-- Internet access only when installing packages
+- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) for
+  development/building
+- Administrator rights for actions that need them (the app will prompt via
+  UAC automatically)
 
 ## Project structure
 
 ```text
-main.py                    # entry point — this is what PyInstaller builds
-app.py                      # window shell, sidebar nav, shared style/layout
-constants.py
-services/                  # backend logic — no tkinter, pure Windows calls
-    shell.py                 # run_command / run_powershell / elevation helpers
-    system_repair.py         # SFC, DISM, CHKDSK, network stack repair
-    cleanup.py                # temp/cache/Recycle Bin/Windows Update cleanup
-    inventory.py              # hardware/OS/disk/network inventory collection
-    network.py                 # connectivity diagnostic checks
-    printer.py                  # printer/spooler/job queries
-    excel_repair.py              # Excel-specific fixes
-    app_repair.py                 # general app fixes + targeted-app tools
-pages/                      # UI, one module per sidebar section (mixins)
-    dashboard.py, inventory.py, network.py, network_repair.py,
-    system_repair.py, cleanup.py, excel.py, apps.py, printer.py,
-    password.py, placeholders.py
+Program.cs                  # entry point
+AppInfo.cs                  # single source of truth for the app version
+ITHelpdeskToolkit.csproj    # project file (net8.0-windows, WinForms)
+
+Models/                     # plain data types shared across services/views
+    InventoryItem.cs
+    NetworkDiagnosticResult.cs
+    PrinterInfo.cs
+    RepairActionItem.cs
+
+services/                   # backend logic — no UI dependency, pure Windows calls
+    ShellService.cs            # run_command / run_powershell / elevation helpers
+    SystemRepairService.cs     # SFC, DISM, CHKDSK, network stack repair
+    CleanupService.cs          # temp/cache/Recycle Bin/Windows Update cleanup
+    InventoryService.cs        # hardware/OS/disk/network inventory collection
+    NetworkService.cs          # connectivity diagnostic checks, gateway lookup
+    PrinterService.cs          # printer/spooler/job queries
+    ExcelRepairService.cs      # Excel-specific fixes
+    AppRepairService.cs        # general app fixes + targeted-app tools
+    PasswordService.cs         # password generation
+
+UI/
+    MainForm.cs              # window shell: sidebar, top bar, view host, theming
+    Theme/Colors.cs           # switchable Dark/Light palette (DarkColors)
+    Controls/                 # shared custom controls (NavButton, ModernButton, CardPanel)
+    Views/                    # one UserControl per sidebar page
+        DashboardView.cs, InventoryView.cs, NetworkView.cs,
+        NetworkRepairView.cs, SystemRepairView.cs, CleanupView.cs,
+        ExcelView.cs, AppRepairView.cs, PrinterView.cs, PasswordView.cs
+
+Assets/
+    ITHelpdeskToolkit.ico    # app icon (embedded via <ApplicationIcon> in the .csproj)
 ```
 
-Each `services/*.py` module is plain Python with no UI dependency, so the
+Each `services/*.cs` class is plain C# with no UI dependency, so the
 repair/diagnostic logic can be tested or reused on its own. Each
-`pages/*.py` module is a mixin class contributing one `show_<page>` method
-plus its supporting handlers; `app.py` combines all of them into the
-`HelpdeskToolkit` window.
+`UI/Views/*.cs` class is a `UserControl` for one sidebar page;
+`MainForm.cs` builds the shell (sidebar, top bar, status strip) and swaps
+the active view into a dedicated host panel via `NavigateTo(pageId)`.
 
 ## Run during development
 
 ```bat
-python -m pip install -r requirements.txt
-python main.py
+dotnet restore
+dotnet run
 ```
 
-## Build one EXE
-
-Double-click `build.bat`, or run manually:
+## Build a release EXE
 
 ```bat
-python -m pip install -r requirements.txt
-pyinstaller --onefile --windowed --name ITHelpdeskToolkit main.py
+dotnet clean
+dotnet build -c Release
 ```
 
-The final executable will be:
+Or for a single self-contained executable:
+
+```bat
+dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true
+```
+
+The output will be under:
 
 ```text
-dist\ITHelpdeskToolkit.exe
+bin\Release\net8.0-windows\win-x64\publish\ITHelpdeskToolkit.exe
 ```
-
-PyInstaller follows the imports from `main.py` through `app.py` and every
-`services/`/`pages/` module automatically — the multi-file source layout
-still produces a single .exe.
 
 ## Notes
 
