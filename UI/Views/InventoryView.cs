@@ -21,6 +21,13 @@ namespace ITHelpdeskToolkit.UI.Views
         private readonly Label _lblStatus;
         private List<InventoryItem> _inventoryData = new();
 
+        // Telemetry API section — endpoint is fixed in AppInfo.TelemetryEndpoint
+        // (source-controlled), not user-editable from the UI.
+        private readonly ModernButton _btnSendTelemetry;
+        private readonly Label _lblTelemetryStatus;
+        private readonly TextBox _txtTelemetryLog;
+        private TelemetryPayload? _lastTelemetry;
+
         public InventoryView()
         {
             DoubleBuffered = true;
@@ -108,6 +115,57 @@ namespace ITHelpdeskToolkit.UI.Views
             };
             header.Controls.Add(_lblStatus);
 
+            // ---- Machine Hardware Telemetry API card ----
+            // Docked to the top too (below the main header), fixed height,
+            // so the results grid still gets whatever space is left.
+            CardPanel telemetryCard = new()
+            {
+                Dock = DockStyle.Top,
+                Height = 90,
+                Padding = new Padding(15, 10, 15, 10)
+            };
+            Controls.Add(telemetryCard);
+
+            Label lblTelemetryTitle = new()
+            {
+                Text = "Send Machine Hardware Telemetry",
+                Font = new Font("Segoe UI", 11F, FontStyle.Bold),
+                ForeColor = DarkColors.TextMain,
+                AutoSize = true,
+                Location = new Point(15, 8)
+            };
+            telemetryCard.Controls.Add(lblTelemetryTitle);
+
+            Label lblTelemetrySub = new()
+            {
+                Text = "POST /api/client-telemetry/collect — sends this PC's live hardware/OS snapshot to the helpdesk API.",
+                Font = new Font("Segoe UI", 9F),
+                ForeColor = DarkColors.TextMuted,
+                AutoSize = true,
+                Location = new Point(15, 30)
+            };
+            telemetryCard.Controls.Add(lblTelemetrySub);
+
+            _btnSendTelemetry = new ModernButton
+            {
+                Text = "📡 Send Telemetry",
+                Style = ButtonStyle.Success,
+                Width = 160,
+                Location = new Point(15, 55)
+            };
+            _btnSendTelemetry.Click += async (s, e) => await SendTelemetryAsync();
+            telemetryCard.Controls.Add(_btnSendTelemetry);
+
+            _lblTelemetryStatus = new Label
+            {
+                Text = "Not sent yet.",
+                Font = new Font("Segoe UI", 9F, FontStyle.Italic),
+                ForeColor = DarkColors.TextMuted,
+                AutoSize = true,
+                Location = new Point(185, 62)
+            };
+            telemetryCard.Controls.Add(_lblTelemetryStatus);
+
             // DataGridView Grid — Dock=Fill instead of a fixed Size + Anchor.
             // The old Anchor-based sizing was computed against this
             // UserControl's size at construction time (before it was ever
@@ -159,6 +217,30 @@ namespace ITHelpdeskToolkit.UI.Views
             });
 
             Controls.Add(_grid);
+
+            // Telemetry send/response log, docked to the bottom so it never
+            // steals space from the grid until there's a result to show.
+            _txtTelemetryLog = new TextBox
+            {
+                Dock = DockStyle.Bottom,
+                Height = 110,
+                Multiline = true,
+                ScrollBars = ScrollBars.Vertical,
+                ReadOnly = true,
+                BackColor = DarkColors.InputBg,
+                ForeColor = DarkColors.TextMain,
+                Font = new Font("Consolas", 9F),
+                BorderStyle = BorderStyle.FixedSingle,
+                Text = "Telemetry send log will appear here."
+            };
+            Controls.Add(_txtTelemetryLog);
+
+            // Note on dock order: header and telemetryCard are both
+            // DockStyle.Top and were added in that order, so header claims
+            // the very top strip and telemetryCard stacks directly beneath
+            // it. _txtTelemetryLog is DockStyle.Bottom and _grid is
+            // DockStyle.Fill, so the grid always gets whatever space is left
+            // after the header, telemetry card, and log claim theirs.
 
             // Auto run scan on load
             Load += async (s, e) => await RunScanAsync();
@@ -246,6 +328,51 @@ namespace ITHelpdeskToolkit.UI.Views
 
                 File.WriteAllText(sfd.FileName, sb.ToString(), Encoding.UTF8);
                 MessageBox.Show($"Report saved to:\n{sfd.FileName}", "Report Saved", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+
+        private async Task SendTelemetryAsync()
+        {
+            string endpoint = AppInfo.TelemetryEndpoint;
+            if (string.IsNullOrWhiteSpace(endpoint))
+            {
+                MessageBox.Show("No telemetry endpoint configured. Set AppInfo.TelemetryEndpoint and rebuild.", "No Endpoint", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            _btnSendTelemetry.Enabled = false;
+            _lblTelemetryStatus.Text = "Collecting hardware telemetry...";
+            _txtTelemetryLog.Text = "";
+
+            try
+            {
+                _lastTelemetry = await TelemetryService.CollectAsync();
+                string url = TelemetryService.BuildEndpointUrl(endpoint);
+
+                _lblTelemetryStatus.Text = $"Sending to {url} ...";
+                _txtTelemetryLog.Text = $"POST {url}\r\nContent-Type: application/json\r\n\r\n{TelemetryService.ToJsonPreview(_lastTelemetry)}\r\n";
+
+                var (success, detail) = await TelemetryService.SendTelemetryAsync(_lastTelemetry, endpoint);
+
+                _txtTelemetryLog.AppendText($"\r\n---- Response ----\r\n{detail}\r\n");
+                _lblTelemetryStatus.Text = success
+                    ? $"Telemetry sent successfully at {DateTime.Now:HH:mm:ss}."
+                    : "Telemetry send failed — see log below.";
+
+                if (!success)
+                {
+                    MessageBox.Show($"Unable to send telemetry:\r\n\r\n{detail}", "Telemetry Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                _lblTelemetryStatus.Text = "Telemetry send failed.";
+                _txtTelemetryLog.AppendText($"\r\nUnexpected error: {ex.Message}\r\n");
+                MessageBox.Show($"Unexpected error sending telemetry: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                _btnSendTelemetry.Enabled = true;
             }
         }
     }

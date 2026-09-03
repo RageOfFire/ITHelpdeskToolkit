@@ -118,6 +118,79 @@ namespace ITHelpdeskToolkit.Services
             return await ShellService.RunPowerShellAsync(script, 30);
         }
 
+        /// <summary>
+        /// Scans the machine for every installed printer driver package
+        /// (Get-PrinterDriver), and flags which of them are currently bound
+        /// to an installed printer (so the UI can warn before uninstalling
+        /// one that's actively in use).
+        /// </summary>
+        public static async Task<List<PrinterDriverInfo>> GetPrinterDriversAsync()
+        {
+            var list = new List<PrinterDriverInfo>();
+
+            string script =
+                "Get-PrinterDriver | Select-Object Name,Manufacturer,DriverVersion,InfPath | ConvertTo-Csv -NoTypeInformation";
+            var (success, output) = await ShellService.RunPowerShellAsync(script);
+            if (!success || string.IsNullOrWhiteSpace(output)) return list;
+
+            string[] lines = output.Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+            if (lines.Length < 2) return list;
+
+            // Cross-reference against installed printers so we know which
+            // driver names are currently bound to a printer object.
+            HashSet<string> driversInUse = new(StringComparer.OrdinalIgnoreCase);
+            try
+            {
+                var printers = await GetPrintersAsync();
+                foreach (var p in printers)
+                {
+                    if (!string.IsNullOrWhiteSpace(p.Driver))
+                        driversInUse.Add(p.Driver);
+                }
+            }
+            catch { /* best effort */ }
+
+            for (int i = 1; i < lines.Length; i++)
+            {
+                string[] parts = ParseCsvLine(lines[i]);
+                if (parts.Length >= 4)
+                {
+                    string name = parts[0].Trim('"').Trim();
+                    list.Add(new PrinterDriverInfo
+                    {
+                        Name = name,
+                        Manufacturer = parts[1].Trim('"').Trim(),
+                        Version = parts[2].Trim('"').Trim(),
+                        DriverPath = parts[3].Trim('"').Trim(),
+                        InUse = driversInUse.Contains(name)
+                    });
+                }
+            }
+
+            return list;
+        }
+
+        /// <summary>
+        /// Uninstalls an installed printer driver package by name via
+        /// Remove-PrinterDriver. Requires administrator rights; elevates
+        /// automatically (UAC prompt) if the app isn't already running as
+        /// admin. Does NOT check whether a printer currently uses the
+        /// driver — callers should confirm with the user first if
+        /// GetPrinterDriversAsync() reported InUse = true.
+        /// </summary>
+        public static async Task<(bool Success, string Output)> UninstallPrinterDriverAsync(string driverName)
+        {
+            if (string.IsNullOrWhiteSpace(driverName))
+                return (false, "No driver selected.");
+
+            string safe = driverName.Replace("'", "''");
+            string psCommand = $"Remove-PrinterDriver -Name '{safe}' -Confirm:$false";
+            string escapedPs = psCommand.Replace("\"", "\\\"");
+            string command = $"powershell -NoProfile -ExecutionPolicy Bypass -Command \"{escapedPs}\"";
+
+            return await ShellService.RunRepairCommandAsync(command, 60, admin: true);
+        }
+
         private static string[] ParseCsvLine(string line)
         {
             var result = new List<string>();

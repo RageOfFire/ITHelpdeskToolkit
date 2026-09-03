@@ -13,6 +13,7 @@ namespace ITHelpdeskToolkit.UI.Views
 {
     public class PrinterView : UserControl
     {
+        // Printers tab
         private readonly DataGridView _grid;
         private readonly TextBox _txtDetails;
         private readonly ModernButton _btnRefresh;
@@ -22,6 +23,15 @@ namespace ITHelpdeskToolkit.UI.Views
         private readonly Label _lblSpoolerStatus;
         private List<PrinterInfo> _printers = new();
         private PrinterInfo? _selectedPrinter;
+
+        // Driver Management tab
+        private readonly DataGridView _driverGrid;
+        private readonly TextBox _txtDriverDetails;
+        private readonly ModernButton _btnScanDrivers;
+        private readonly ModernButton _btnUninstallDriver;
+        private readonly Label _lblDriverStatus;
+        private List<PrinterDriverInfo> _drivers = new();
+        private PrinterDriverInfo? _selectedDriver;
 
         public PrinterView()
         {
@@ -43,7 +53,7 @@ namespace ITHelpdeskToolkit.UI.Views
 
             Label lblSub = new()
             {
-                Text = "Inspect installed printers, print jobs, printer ports, and the Windows Print Spooler service.",
+                Text = "Inspect installed printers, print jobs, driver packages, and the Windows Print Spooler service.",
                 Font = new Font("Segoe UI", 10F),
                 ForeColor = DarkColors.TextMuted,
                 AutoSize = true,
@@ -51,15 +61,30 @@ namespace ITHelpdeskToolkit.UI.Views
             };
             Controls.Add(lblSub);
 
-            // Print Spooler Status Card
+            TabControl tabs = new()
+            {
+                Location = new Point(0, 70),
+                Size = new Size(950, 550),
+                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
+                Font = new Font("Segoe UI", 9.5F, FontStyle.Bold)
+            };
+            Controls.Add(tabs);
+
+            TabPage tabPrinters = new("Printers") { BackColor = DarkColors.Background, Padding = new Padding(10) };
+            TabPage tabDrivers = new("Driver Management") { BackColor = DarkColors.Background, Padding = new Padding(10) };
+            tabs.TabPages.Add(tabPrinters);
+            tabs.TabPages.Add(tabDrivers);
+
+            // ================= Printers Tab =================
+
             CardPanel spoolerCard = new()
             {
-                Location = new Point(0, 75),
-                Size = new Size(950, 48),
+                Location = new Point(0, 0),
+                Size = new Size(900, 48),
                 Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
                 Padding = new Padding(15, 10, 15, 10)
             };
-            Controls.Add(spoolerCard);
+            tabPrinters.Controls.Add(spoolerCard);
 
             Label lblSpoolerTitle = new()
             {
@@ -81,14 +106,13 @@ namespace ITHelpdeskToolkit.UI.Views
             };
             spoolerCard.Controls.Add(_lblSpoolerStatus);
 
-            // Action Buttons Toolbar
             FlowLayoutPanel actionPanel = new()
             {
-                Location = new Point(0, 132),
-                Size = new Size(950, 42),
+                Location = new Point(0, 57),
+                Size = new Size(900, 42),
                 Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
             };
-            Controls.Add(actionPanel);
+            tabPrinters.Controls.Add(actionPanel);
 
             _btnRefresh = new ModernButton
             {
@@ -129,11 +153,10 @@ namespace ITHelpdeskToolkit.UI.Views
             _btnRestartSpooler.Click += async (s, e) => await RestartSpoolerAsync();
             actionPanel.Controls.Add(_btnRestartSpooler);
 
-            // Table Grid
             _grid = new DataGridView
             {
-                Location = new Point(0, 182),
-                Size = new Size(950, 210),
+                Location = new Point(0, 107),
+                Size = new Size(900, 210),
                 Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
                 BackgroundColor = DarkColors.CardBg,
                 BorderStyle = BorderStyle.None,
@@ -168,23 +191,22 @@ namespace ITHelpdeskToolkit.UI.Views
             _grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "Port", HeaderText = "Port", FillWeight = 20 });
 
             _grid.SelectionChanged += GridSelectionChanged;
-            Controls.Add(_grid);
+            tabPrinters.Controls.Add(_grid);
 
-            // Details Log Console
             Label lblDetails = new()
             {
                 Text = "Troubleshooting Details",
                 Font = new Font("Segoe UI", 12F, FontStyle.Bold),
                 ForeColor = DarkColors.TextMain,
                 AutoSize = true,
-                Location = new Point(0, 402)
+                Location = new Point(0, 327)
             };
-            Controls.Add(lblDetails);
+            tabPrinters.Controls.Add(lblDetails);
 
             _txtDetails = new TextBox
             {
-                Location = new Point(0, 430),
-                Size = new Size(950, 190),
+                Location = new Point(0, 355),
+                Size = new Size(900, 155),
                 Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
                 Multiline = true,
                 ScrollBars = ScrollBars.Vertical,
@@ -194,7 +216,123 @@ namespace ITHelpdeskToolkit.UI.Views
                 Font = new Font("Consolas", 9.5F),
                 BorderStyle = BorderStyle.FixedSingle
             };
-            Controls.Add(_txtDetails);
+            tabPrinters.Controls.Add(_txtDetails);
+
+            // ================= Driver Management Tab =================
+
+            Label lblDriverIntro = new()
+            {
+                Text = "Scans every printer driver package installed on this machine (Get-PrinterDriver) and lets you uninstall ones you no longer need.",
+                Font = new Font("Segoe UI", 9.5F),
+                ForeColor = DarkColors.TextMuted,
+                AutoSize = true,
+                MaximumSize = new Size(880, 0),
+                Location = new Point(0, 0)
+            };
+            tabDrivers.Controls.Add(lblDriverIntro);
+
+            FlowLayoutPanel driverActionPanel = new()
+            {
+                Location = new Point(0, 32),
+                Size = new Size(900, 42),
+                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
+            };
+            tabDrivers.Controls.Add(driverActionPanel);
+
+            _btnScanDrivers = new ModernButton
+            {
+                Text = "🔍 Scan Installed Drivers",
+                Style = ButtonStyle.Primary,
+                Width = 190,
+                Margin = new Padding(0, 0, 10, 0)
+            };
+            _btnScanDrivers.Click += async (s, e) => await ScanDriversAsync();
+            driverActionPanel.Controls.Add(_btnScanDrivers);
+
+            _btnUninstallDriver = new ModernButton
+            {
+                Text = "🗑 Uninstall Selected Driver",
+                Style = ButtonStyle.Danger,
+                Width = 205
+            };
+            _btnUninstallDriver.Click += async (s, e) => await UninstallSelectedDriverAsync();
+            driverActionPanel.Controls.Add(_btnUninstallDriver);
+
+            _lblDriverStatus = new Label
+            {
+                Text = "Ready to scan.",
+                Font = new Font("Segoe UI", 9.5F, FontStyle.Italic),
+                ForeColor = DarkColors.TextMuted,
+                AutoSize = true,
+                Location = new Point(0, 79)
+            };
+            tabDrivers.Controls.Add(_lblDriverStatus);
+
+            _driverGrid = new DataGridView
+            {
+                Location = new Point(0, 107),
+                Size = new Size(900, 230),
+                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
+                BackgroundColor = DarkColors.CardBg,
+                BorderStyle = BorderStyle.None,
+                CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal,
+                GridColor = DarkColors.CardBorder,
+                RowHeadersVisible = false,
+                AllowUserToAddRows = false,
+                AllowUserToDeleteRows = false,
+                ReadOnly = true,
+                SelectionMode = DataGridViewSelectionMode.FullRowSelect,
+                MultiSelect = false,
+                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
+            };
+
+            _driverGrid.EnableHeadersVisualStyles = false;
+            _driverGrid.ColumnHeadersDefaultCellStyle.BackColor = DarkColors.Header;
+            _driverGrid.ColumnHeadersDefaultCellStyle.ForeColor = DarkColors.TextMain;
+            _driverGrid.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            _driverGrid.ColumnHeadersHeight = 34;
+
+            _driverGrid.DefaultCellStyle.BackColor = DarkColors.CardBg;
+            _driverGrid.DefaultCellStyle.ForeColor = DarkColors.TextMain;
+            _driverGrid.DefaultCellStyle.SelectionBackColor = DarkColors.Primary;
+            _driverGrid.DefaultCellStyle.SelectionForeColor = Color.White;
+            _driverGrid.DefaultCellStyle.Font = new Font("Segoe UI", 9.5F);
+            _driverGrid.RowTemplate.Height = 30;
+
+            _driverGrid.Columns.Add(new DataGridViewTextBoxColumn { Name = "Name", HeaderText = "Driver Name", FillWeight = 35 });
+            _driverGrid.Columns.Add(new DataGridViewTextBoxColumn { Name = "Manufacturer", HeaderText = "Manufacturer", FillWeight = 20 });
+            _driverGrid.Columns.Add(new DataGridViewTextBoxColumn { Name = "Version", HeaderText = "Version", FillWeight = 15 });
+            _driverGrid.Columns.Add(new DataGridViewTextBoxColumn { Name = "InUse", HeaderText = "In Use", FillWeight = 10 });
+            _driverGrid.Columns.Add(new DataGridViewTextBoxColumn { Name = "Path", HeaderText = "INF Path", FillWeight = 20 });
+
+            _driverGrid.SelectionChanged += DriverGridSelectionChanged;
+            tabDrivers.Controls.Add(_driverGrid);
+
+            Label lblDriverDetails = new()
+            {
+                Text = "Driver Details",
+                Font = new Font("Segoe UI", 12F, FontStyle.Bold),
+                ForeColor = DarkColors.TextMain,
+                AutoSize = true,
+                Location = new Point(0, 347)
+            };
+            tabDrivers.Controls.Add(lblDriverDetails);
+
+            _txtDriverDetails = new TextBox
+            {
+                Location = new Point(0, 375),
+                Size = new Size(900, 135),
+                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
+                Multiline = true,
+                ScrollBars = ScrollBars.Vertical,
+                ReadOnly = true,
+                BackColor = DarkColors.InputBg,
+                ForeColor = DarkColors.TextMain,
+                Font = new Font("Consolas", 9.5F),
+                BorderStyle = BorderStyle.FixedSingle,
+                Text = "Select 'Scan Installed Drivers' to list every printer driver package on this machine."
+            };
+            tabDrivers.Controls.Add(_txtDriverDetails);
 
             Load += async (s, e) => await RefreshPrintersAsync();
         }
@@ -354,6 +492,106 @@ namespace ITHelpdeskToolkit.UI.Views
                 {
                     MessageBox.Show($"Could not restart Print Spooler:\r\n\r\n{output}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
+            }
+        }
+
+        // ================= Driver Management =================
+
+        private async Task ScanDriversAsync()
+        {
+            _btnScanDrivers.Enabled = false;
+            _lblDriverStatus.Text = "Scanning installed printer drivers...";
+            _driverGrid.Rows.Clear();
+            _selectedDriver = null;
+
+            try
+            {
+                _drivers = await PrinterService.GetPrinterDriversAsync();
+                foreach (var d in _drivers)
+                {
+                    _driverGrid.Rows.Add(d.Name, d.Manufacturer, d.Version, d.InUse ? "Yes" : "No", d.DriverPath);
+                }
+
+                _lblDriverStatus.Text = _drivers.Count == 0
+                    ? "No printer driver packages were returned by Windows."
+                    : $"Scan complete — {_drivers.Count} driver package(s) found.";
+            }
+            catch (Exception ex)
+            {
+                _lblDriverStatus.Text = "Driver scan failed.";
+                _txtDriverDetails.Text = $"Failed to scan printer drivers: {ex.Message}";
+            }
+            finally
+            {
+                _btnScanDrivers.Enabled = true;
+            }
+        }
+
+        private void DriverGridSelectionChanged(object? sender, EventArgs e)
+        {
+            if (_driverGrid.SelectedRows.Count == 0)
+            {
+                _selectedDriver = null;
+                return;
+            }
+
+            int idx = _driverGrid.SelectedRows[0].Index;
+            if (idx >= 0 && idx < _drivers.Count)
+            {
+                _selectedDriver = _drivers[idx];
+                StringBuilder sb = new();
+                sb.AppendLine($"DRIVER: {_selectedDriver.Name}");
+                sb.AppendLine(new string('=', 65));
+                sb.AppendLine($"\r\nManufacturer: {_selectedDriver.Manufacturer}");
+                sb.AppendLine($"Version:      {_selectedDriver.Version}");
+                sb.AppendLine($"INF Path:     {_selectedDriver.DriverPath}");
+                sb.AppendLine($"In Use:       {(_selectedDriver.InUse ? "Yes — bound to an installed printer" : "No")}\r\n");
+
+                sb.AppendLine(_selectedDriver.InUse
+                    ? "WARNING: This driver is currently bound to an installed printer. Uninstalling it may break that printer until a new driver is installed."
+                    : "This driver does not appear to be bound to any currently installed printer.");
+
+                _txtDriverDetails.Text = sb.ToString();
+            }
+        }
+
+        private async Task UninstallSelectedDriverAsync()
+        {
+            if (_selectedDriver == null)
+            {
+                MessageBox.Show("Select a printer driver first.", "Select Driver", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            string warning = _selectedDriver.InUse
+                ? $"'{_selectedDriver.Name}' is currently bound to an installed printer.\r\n\r\nUninstalling it may break that printer until a replacement driver is installed.\r\n\r\nUninstall anyway?"
+                : $"Uninstall printer driver package:\r\n\r\n{_selectedDriver.Name}\r\n\r\nThis requires administrator rights and may prompt for elevation. Continue?";
+
+            DialogResult dr = MessageBox.Show(
+                warning,
+                "Uninstall Printer Driver",
+                MessageBoxButtons.YesNo,
+                _selectedDriver.InUse ? MessageBoxIcon.Warning : MessageBoxIcon.Question
+            );
+
+            if (dr != DialogResult.Yes) return;
+
+            _btnUninstallDriver.Enabled = false;
+            _lblDriverStatus.Text = $"Uninstalling {_selectedDriver.Name}...";
+
+            var (success, output) = await PrinterService.UninstallPrinterDriverAsync(_selectedDriver.Name);
+
+            _btnUninstallDriver.Enabled = true;
+
+            if (success)
+            {
+                MessageBox.Show("Printer driver uninstalled successfully.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                await ScanDriversAsync();
+            }
+            else
+            {
+                _lblDriverStatus.Text = "Driver uninstall failed.";
+                MessageBox.Show($"Unable to uninstall printer driver:\r\n\r\n{output}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
     }
