@@ -33,6 +33,7 @@ namespace ITHelpdeskToolkit.UI.Views
             // Title
             Label lblTitle = new()
             {
+                BackColor = Color.Transparent,
                 Text = "System Cleanup",
                 Font = new Font("Segoe UI", 20F, FontStyle.Bold),
                 ForeColor = DarkColors.TextMain,
@@ -43,6 +44,7 @@ namespace ITHelpdeskToolkit.UI.Views
 
             Label lblSub = new()
             {
+                BackColor = Color.Transparent,
                 Text = "Free up disk space by clearing temp files, browser caches, and Windows Update leftovers.",
                 Font = new Font("Segoe UI", 10F),
                 ForeColor = DarkColors.TextMuted,
@@ -63,6 +65,7 @@ namespace ITHelpdeskToolkit.UI.Views
 
             Label lblSpaceTitle = new()
             {
+                BackColor = Color.Transparent,
                 Text = "Disk Space:",
                 Font = new Font("Segoe UI", 9.5F, FontStyle.Bold),
                 ForeColor = DarkColors.TextMuted,
@@ -73,6 +76,7 @@ namespace ITHelpdeskToolkit.UI.Views
 
             _lblDiskSpace = new Label
             {
+                BackColor = Color.Transparent,
                 Text = "Checking...",
                 Font = new Font("Consolas", 10F, FontStyle.Bold),
                 ForeColor = DarkColors.Success,
@@ -160,6 +164,7 @@ namespace ITHelpdeskToolkit.UI.Views
             // Details Log
             Label lblDetails = new()
             {
+                BackColor = Color.Transparent,
                 Text = "Details",
                 Font = new Font("Segoe UI", 12F, FontStyle.Bold),
                 ForeColor = DarkColors.TextMain,

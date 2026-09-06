@@ -31,6 +31,7 @@ namespace ITHelpdeskToolkit.UI.Views
             // Title
             Label lblTitle = new()
             {
+                BackColor = Color.Transparent,
                 Text = "Windows / File System Repair",
                 Font = new Font("Segoe UI", 20F, FontStyle.Bold),
                 ForeColor = DarkColors.TextMain,
@@ -41,6 +42,7 @@ namespace ITHelpdeskToolkit.UI.Views
 
             Label lblSub = new()
             {
+                BackColor = Color.Transparent,
                 Text = "Repair corrupted system files, Windows component store, and NTFS file system errors.",
                 Font = new Font("Segoe UI", 10F),
                 ForeColor = DarkColors.TextMuted,
@@ -118,6 +120,7 @@ namespace ITHelpdeskToolkit.UI.Views
             // Details Log
             Label lblDetails = new()
             {
+                BackColor = Color.Transparent,
                 Text = "Details",
                 Font = new Font("Segoe UI", 12F, FontStyle.Bold),
                 ForeColor = DarkColors.TextMain,

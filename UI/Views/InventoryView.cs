@@ -48,6 +48,7 @@ namespace ITHelpdeskToolkit.UI.Views
             // Title
             Label lblTitle = new()
             {
+                BackColor = Color.Transparent,
                 Text = "Asset Inventory",
                 Font = new Font("Segoe UI", 20F, FontStyle.Bold),
                 ForeColor = DarkColors.TextMain,
@@ -58,6 +59,7 @@ namespace ITHelpdeskToolkit.UI.Views
 
             Label lblSub = new()
             {
+                BackColor = Color.Transparent,
                 Text = "Collect hardware, Windows OS, storage, and network specifications from this endpoint.",
                 Font = new Font("Segoe UI", 10F),
                 ForeColor = DarkColors.TextMuted,
@@ -107,6 +109,7 @@ namespace ITHelpdeskToolkit.UI.Views
             // Status indicator
             _lblStatus = new Label
             {
+                BackColor = Color.Transparent,
                 Text = "Ready to scan.",
                 Font = new Font("Segoe UI", 9.5F, FontStyle.Italic),
                 ForeColor = DarkColors.TextMuted,
@@ -128,6 +131,7 @@ namespace ITHelpdeskToolkit.UI.Views
 
             Label lblTelemetryTitle = new()
             {
+                BackColor = Color.Transparent,
                 Text = "Send Machine Hardware Telemetry",
                 Font = new Font("Segoe UI", 11F, FontStyle.Bold),
                 ForeColor = DarkColors.TextMain,
@@ -138,6 +142,7 @@ namespace ITHelpdeskToolkit.UI.Views
 
             Label lblTelemetrySub = new()
             {
+                BackColor = Color.Transparent,
                 Text = "POST /api/client-telemetry/collect — sends this PC's live hardware/OS snapshot to the helpdesk API.",
                 Font = new Font("Segoe UI", 9F),
                 ForeColor = DarkColors.TextMuted,
@@ -158,6 +163,7 @@ namespace ITHelpdeskToolkit.UI.Views
 
             _lblTelemetryStatus = new Label
             {
+                BackColor = Color.Transparent,
                 Text = "Not sent yet.",
                 Font = new Font("Segoe UI", 9F, FontStyle.Italic),
                 ForeColor = DarkColors.TextMuted,

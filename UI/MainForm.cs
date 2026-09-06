@@ -241,6 +241,7 @@ namespace ITHelpdeskToolkit.UI
 
             Label lblAppTitle = new()
             {
+                BackColor = Color.Transparent,
                 Text = "IT HELPDESK",
                 Font = new Font("Segoe UI", 14F, FontStyle.Bold),
                 ForeColor = DarkColors.TextMain,
@@ -252,6 +253,7 @@ namespace ITHelpdeskToolkit.UI
 
             Label lblSubTitle = new()
             {
+                BackColor = Color.Transparent,
                 Text = $"TOOLKIT v{AppInfo.Version}",
                 Font = new Font("Segoe UI", 9F, FontStyle.Bold),
                 ForeColor = DarkColors.Primary,
@@ -292,6 +294,7 @@ namespace ITHelpdeskToolkit.UI
                 ("system_repair", "🛠 Windows / Repair"),
                 ("cleanup", "🧹 System Cleanup"),
                 ("excel", "📊 Excel Troubleshooter"),
+                ("virus_scan", "🛡 Virus Scan"),
                 ("apps", "📦 Application Fixes"),
                 ("printer", "🖨 Printer Fixes"),
                 ("password", "🔐 Password Generator")
@@ -322,6 +325,7 @@ namespace ITHelpdeskToolkit.UI
             // Footer version text
             Label lblFooter = new()
             {
+                BackColor = Color.Transparent,
                 Text = "Windows Repair Edition",
                 Font = new Font("Segoe UI", 8F),
                 ForeColor = DarkColors.TextDim,
@@ -360,6 +364,7 @@ namespace ITHelpdeskToolkit.UI
                 "system_repair" => new SystemRepairView(),
                 "cleanup" => new CleanupView(),
                 "excel" => new ExcelView(),
+                "virus_scan" => new VirusScanView(),
                 "apps" => new AppRepairView(),
                 "printer" => new PrinterView(),
                 "password" => new PasswordView(),

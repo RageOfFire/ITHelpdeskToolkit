@@ -29,6 +29,7 @@ namespace ITHelpdeskToolkit.UI.Views
             // Title
             Label lblTitle = new()
             {
+                BackColor = Color.Transparent,
                 Text = "Password Generator",
                 Font = new Font("Segoe UI", 20F, FontStyle.Bold),
                 ForeColor = DarkColors.TextMain,
@@ -39,6 +40,7 @@ namespace ITHelpdeskToolkit.UI.Views
 
             Label lblSub = new()
             {
+                BackColor = Color.Transparent,
                 Text = "Generate cryptographically secure random passwords for administrative IT use.",
                 Font = new Font("Segoe UI", 10F),
                 ForeColor = DarkColors.TextMuted,
@@ -72,6 +74,7 @@ namespace ITHelpdeskToolkit.UI.Views
             // Length row
             Label lblLenTitle = new()
             {
+                BackColor = Color.Transparent,
                 Text = "Password Length:",
                 Font = new Font("Segoe UI", 10F, FontStyle.Bold),
                 ForeColor = DarkColors.TextMain,
@@ -104,6 +107,7 @@ namespace ITHelpdeskToolkit.UI.Views
 
             Label lblOptTitle = new()
             {
+                BackColor = Color.Transparent,
                 Text = "Character Set Options",
                 Font = new Font("Segoe UI", 9.5F, FontStyle.Bold),
                 ForeColor = DarkColors.Primary,
@@ -154,6 +158,7 @@ namespace ITHelpdeskToolkit.UI.Views
             // Status Label
             _lblStatus = new Label
             {
+                BackColor = Color.Transparent,
                 Location = new Point(25, 330),
                 AutoSize = true,
                 Font = new Font("Segoe UI", 9.5F, FontStyle.Italic),
@@ -168,6 +173,7 @@ namespace ITHelpdeskToolkit.UI.Views
         {
             return new CheckBox
             {
+                BackColor = Color.Transparent,
                 Text = text,
                 Checked = checkedState,
                 Font = new Font("Segoe UI", 9.5F),

@@ -31,6 +31,7 @@ namespace ITHelpdeskToolkit.UI.Views
             // Title
             Label lblTitle = new()
             {
+                BackColor = Color.Transparent,
                 Text = "Network Diagnostics",
                 Font = new Font("Segoe UI", 20F, FontStyle.Bold),
                 ForeColor = DarkColors.TextMain,
@@ -41,6 +42,7 @@ namespace ITHelpdeskToolkit.UI.Views
 
             Label lblSub = new()
             {
+                BackColor = Color.Transparent,
                 Text = "Run network connectivity tests and identify root cause connectivity breakdown.",
                 Font = new Font("Segoe UI", 10F),
                 ForeColor = DarkColors.TextMuted,
@@ -80,6 +82,7 @@ namespace ITHelpdeskToolkit.UI.Views
 
             Label lblHops = new()
             {
+                BackColor = Color.Transparent,
                 Text = "Tracert Hops:",
                 Font = new Font("Segoe UI", 9.5F),
                 ForeColor = DarkColors.TextMain,
@@ -141,6 +144,7 @@ namespace ITHelpdeskToolkit.UI.Views
             // Details Label
             Label lblDetails = new()
             {
+                BackColor = Color.Transparent,
                 Text = "Diagnostic Details",
                 Font = new Font("Segoe UI", 12F, FontStyle.Bold),
                 ForeColor = DarkColors.TextMain,

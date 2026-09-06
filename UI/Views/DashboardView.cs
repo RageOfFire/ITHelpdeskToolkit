@@ -26,6 +26,7 @@ namespace ITHelpdeskToolkit.UI.Views
             // Title Header
             Label lblTitle = new()
             {
+                BackColor = Color.Transparent,
                 Text = "IT Helpdesk Toolkit",
                 Font = new Font("Segoe UI", 22F, FontStyle.Bold),
                 ForeColor = DarkColors.TextMain,
@@ -36,6 +37,7 @@ namespace ITHelpdeskToolkit.UI.Views
 
             Label lblSub = new()
             {
+                BackColor = Color.Transparent,
                 Text = "A single application for common endpoint support and troubleshooting tasks.",
                 Font = new Font("Segoe UI", 10F),
                 ForeColor = DarkColors.TextMuted,
@@ -68,6 +70,7 @@ namespace ITHelpdeskToolkit.UI.Views
             // Quick Actions Label
             Label lblQuickActions = new()
             {
+                BackColor = Color.Transparent,
                 Text = "Quick Actions",
                 Font = new Font("Segoe UI", 14F, FontStyle.Bold),
                 ForeColor = DarkColors.TextMain,
@@ -106,6 +109,7 @@ namespace ITHelpdeskToolkit.UI.Views
 
             Label lblGuideTitle = new()
             {
+                BackColor = Color.Transparent,
                 Text = "Recommended Support Workflow",
                 Font = new Font("Segoe UI", 11F, FontStyle.Bold),
                 ForeColor = DarkColors.Primary,
@@ -116,6 +120,7 @@ namespace ITHelpdeskToolkit.UI.Views
 
             Label lblWorkflow = new()
             {
+                BackColor = Color.Transparent,
                 Text = "1. Scan Endpoint → Collect full hardware/OS specs and network configuration.\n" +
                        "2. Diagnostic Checks → Run Network & Printer connectivity diagnostics.\n" +
                        "3. Targeted Repairs → Apply Windows/File system repairs or Excel/App troubleshooting.\n" +
@@ -158,6 +163,7 @@ namespace ITHelpdeskToolkit.UI.Views
 
             Label lblTitle = new()
             {
+                BackColor = Color.Transparent,
                 Text = title.ToUpperInvariant(),
                 Font = new Font("Segoe UI", 8.5F, FontStyle.Bold),
                 ForeColor = DarkColors.TextMuted,
@@ -168,6 +174,7 @@ namespace ITHelpdeskToolkit.UI.Views
 
             Label lblVal = new()
             {
+                BackColor = Color.Transparent,
                 Text = value,
                 Font = new Font("Segoe UI", 13F, FontStyle.Bold),
                 ForeColor = accentColor,

@@ -43,6 +43,7 @@ namespace ITHelpdeskToolkit.UI.Views
             // Title
             Label lblTitle = new()
             {
+                BackColor = Color.Transparent,
                 Text = "Printer Troubleshooter",
                 Font = new Font("Segoe UI", 20F, FontStyle.Bold),
                 ForeColor = DarkColors.TextMain,
@@ -53,6 +54,7 @@ namespace ITHelpdeskToolkit.UI.Views
 
             Label lblSub = new()
             {
+                BackColor = Color.Transparent,
                 Text = "Inspect installed printers, print jobs, driver packages, and the Windows Print Spooler service.",
                 Font = new Font("Segoe UI", 10F),
                 ForeColor = DarkColors.TextMuted,
@@ -88,6 +90,7 @@ namespace ITHelpdeskToolkit.UI.Views
 
             Label lblSpoolerTitle = new()
             {
+                BackColor = Color.Transparent,
                 Text = "Print Spooler Service:",
                 Font = new Font("Segoe UI", 9.5F, FontStyle.Bold),
                 ForeColor = DarkColors.TextMuted,
@@ -98,6 +101,7 @@ namespace ITHelpdeskToolkit.UI.Views
 
             _lblSpoolerStatus = new Label
             {
+                BackColor = Color.Transparent,
                 Text = "Checking...",
                 Font = new Font("Segoe UI", 10F, FontStyle.Bold),
                 ForeColor = DarkColors.Success,
@@ -195,6 +199,7 @@ namespace ITHelpdeskToolkit.UI.Views
 
             Label lblDetails = new()
             {
+                BackColor = Color.Transparent,
                 Text = "Troubleshooting Details",
                 Font = new Font("Segoe UI", 12F, FontStyle.Bold),
                 ForeColor = DarkColors.TextMain,
@@ -222,6 +227,7 @@ namespace ITHelpdeskToolkit.UI.Views
 
             Label lblDriverIntro = new()
             {
+                BackColor = Color.Transparent,
                 Text = "Scans every printer driver package installed on this machine (Get-PrinterDriver) and lets you uninstall ones you no longer need.",
                 Font = new Font("Segoe UI", 9.5F),
                 ForeColor = DarkColors.TextMuted,
@@ -260,6 +266,7 @@ namespace ITHelpdeskToolkit.UI.Views
 
             _lblDriverStatus = new Label
             {
+                BackColor = Color.Transparent,
                 Text = "Ready to scan.",
                 Font = new Font("Segoe UI", 9.5F, FontStyle.Italic),
                 ForeColor = DarkColors.TextMuted,
@@ -310,6 +317,7 @@ namespace ITHelpdeskToolkit.UI.Views
 
             Label lblDriverDetails = new()
             {
+                BackColor = Color.Transparent,
                 Text = "Driver Details",
                 Font = new Font("Segoe UI", 12F, FontStyle.Bold),
                 ForeColor = DarkColors.TextMain,

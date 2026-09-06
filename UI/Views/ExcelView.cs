@@ -17,8 +17,7 @@ namespace ITHelpdeskToolkit.UI.Views
         private readonly TextBox _txtDetails;
         private readonly ModernButton _btnRunAll;
         private readonly ModernButton _btnRunSelected;
-        private readonly ModernButton _btnConvertXls;
-        private readonly ModernButton _btnSafeMode;
+        private readonly ModernButton _btnMoreTools;
         private readonly List<RepairActionItem> _actions;
 
         public ExcelView()
@@ -33,6 +32,7 @@ namespace ITHelpdeskToolkit.UI.Views
             // Title
             Label lblTitle = new()
             {
+                BackColor = Color.Transparent,
                 Text = "Excel Troubleshooter",
                 Font = new Font("Segoe UI", 20F, FontStyle.Bold),
                 ForeColor = DarkColors.TextMain,
@@ -43,6 +43,7 @@ namespace ITHelpdeskToolkit.UI.Views
 
             Label lblSub = new()
             {
+                BackColor = Color.Transparent,
                 Text = "Quick fixes for Excel crashes, slow startup, stuck add-ins, corrupted toolbars, and file conversion.",
                 Font = new Font("Segoe UI", 10F),
                 ForeColor = DarkColors.TextMuted,
@@ -80,24 +81,26 @@ namespace ITHelpdeskToolkit.UI.Views
             _btnRunSelected.Click += async (s, e) => await RunSelectedFixAsync();
             actionPanel.Controls.Add(_btnRunSelected);
 
-            _btnConvertXls = new ModernButton
+            // Secondary/less-frequent actions live behind one dropdown instead of spreading
+            // across the toolbar, so the row never wraps or gets clipped at smaller window sizes.
+            ContextMenuStrip moreToolsMenu = new()
             {
-                Text = "📄 Convert .xls to .xlsx",
-                Style = ButtonStyle.Secondary,
-                Width = 180,
-                Margin = new Padding(0, 0, 10, 0)
+                Font = new Font("Segoe UI", 9.5F)
             };
-            _btnConvertXls.Click += async (s, e) => await ConvertXlsDialogAsync();
-            actionPanel.Controls.Add(_btnConvertXls);
+            moreToolsMenu.Items.Add("📄  Convert .xls to .xlsx...", null, async (s, e) => await ConvertXlsDialogAsync());
+            moreToolsMenu.Items.Add("🩹  Repair Workbook File...", null, async (s, e) => await RepairWorkbookDialogAsync());
+            moreToolsMenu.Items.Add("🔗  Scan Broken Links...", null, async (s, e) => await ScanBrokenLinksDialogAsync());
+            moreToolsMenu.Items.Add(new ToolStripSeparator());
+            moreToolsMenu.Items.Add("🛟  Open Safe Mode", null, (s, e) => OpenSafeMode());
 
-            _btnSafeMode = new ModernButton
+            _btnMoreTools = new ModernButton
             {
-                Text = "🛟 Open Safe Mode",
+                Text = "⚙ More Tools ▾",
                 Style = ButtonStyle.Secondary,
-                Width = 155
+                Width = 145
             };
-            _btnSafeMode.Click += (s, e) => OpenSafeMode();
-            actionPanel.Controls.Add(_btnSafeMode);
+            _btnMoreTools.Click += (s, e) => moreToolsMenu.Show(_btnMoreTools, new Point(0, _btnMoreTools.Height));
+            actionPanel.Controls.Add(_btnMoreTools);
 
             // Table Grid
             _grid = new DataGridView
@@ -140,6 +143,7 @@ namespace ITHelpdeskToolkit.UI.Views
             // Details Log
             Label lblDetails = new()
             {
+                BackColor = Color.Transparent,
                 Text = "Details",
                 Font = new Font("Segoe UI", 12F, FontStyle.Bold),
                 ForeColor = DarkColors.TextMain,
@@ -256,6 +260,56 @@ namespace ITHelpdeskToolkit.UI.Views
                 _txtDetails.Text = sb.ToString();
 
                 MessageBox.Show(summary, ok ? "Conversion Complete" : "Conversion Finished with Issues", MessageBoxButtons.OK, ok ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
+            }
+        }
+
+        private async Task RepairWorkbookDialogAsync()
+        {
+            using OpenFileDialog ofd = new()
+            {
+                Title = "Select a corrupt/broken Excel file to repair",
+                Filter = "Excel Workbooks (*.xls;*.xlsx;*.xlsm;*.xlsb)|*.xls;*.xlsx;*.xlsm;*.xlsb|All Files (*.*)|*.*"
+            };
+
+            if (ofd.ShowDialog() == DialogResult.OK && !string.IsNullOrWhiteSpace(ofd.FileName))
+            {
+                _txtDetails.Text = $"Repairing {ofd.FileName}...\r\n\r\n(This opens the file through Excel's built-in repair mode — Excel will briefly appear in the background.)";
+                var (ok, output) = await ExcelRepairService.RepairCorruptWorkbookAsync(ofd.FileName);
+
+                StringBuilder sb = new();
+                sb.AppendLine("Workbook Repair Result");
+                sb.AppendLine(new string('=', 60));
+                sb.AppendLine(output);
+                _txtDetails.Text = sb.ToString();
+
+                MessageBox.Show(ok ? "Workbook repaired and saved." : "Repair failed — see details.",
+                    ok ? "Repair Complete" : "Repair Failed",
+                    MessageBoxButtons.OK, ok ? MessageBoxIcon.Information : MessageBoxIcon.Error);
+            }
+        }
+
+        private async Task ScanBrokenLinksDialogAsync()
+        {
+            using OpenFileDialog ofd = new()
+            {
+                Title = "Select an Excel file to scan for broken external links",
+                Filter = "Excel Workbooks (*.xls;*.xlsx;*.xlsm;*.xlsb)|*.xls;*.xlsx;*.xlsm;*.xlsb|All Files (*.*)|*.*"
+            };
+
+            if (ofd.ShowDialog() == DialogResult.OK && !string.IsNullOrWhiteSpace(ofd.FileName))
+            {
+                _txtDetails.Text = $"Scanning {ofd.FileName} for external link references...\r\n\r\n(Excel will briefly appear in the background.)";
+                var (ok, output) = await ExcelRepairService.ScanBrokenLinksAsync(ofd.FileName);
+
+                StringBuilder sb = new();
+                sb.AppendLine("Broken Link Scan Result");
+                sb.AppendLine(new string('=', 60));
+                sb.AppendLine(output);
+                _txtDetails.Text = sb.ToString();
+
+                MessageBox.Show(ok ? "No broken links found." : "Broken links found — see details.",
+                    ok ? "Scan Complete" : "Broken Links Found",
+                    MessageBoxButtons.OK, ok ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
             }
         }
 

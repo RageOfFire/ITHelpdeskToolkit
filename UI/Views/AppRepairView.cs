@@ -32,6 +32,7 @@ namespace ITHelpdeskToolkit.UI.Views
             // Title Header
             Label lblTitle = new()
             {
+                BackColor = Color.Transparent,
                 Text = "Application Fixes",
                 Font = new Font("Segoe UI", 20F, FontStyle.Bold),
                 ForeColor = DarkColors.TextMain,
@@ -42,6 +43,7 @@ namespace ITHelpdeskToolkit.UI.Views
 
             Label lblSub = new()
             {
+                BackColor = Color.Transparent,
                 Text = "Fix system-wide Windows app issues, or target one specific app by process/app name.",
                 Font = new Font("Segoe UI", 10F),
                 ForeColor = DarkColors.TextMuted,
@@ -53,6 +55,7 @@ namespace ITHelpdeskToolkit.UI.Views
             // General Fixes Section Title
             Label lblGeneral = new()
             {
+                BackColor = Color.Transparent,
                 Text = "General Windows Fixes",
                 Font = new Font("Segoe UI", 11.5F, FontStyle.Bold),
                 ForeColor = DarkColors.TextMain,
@@ -139,6 +142,7 @@ namespace ITHelpdeskToolkit.UI.Views
 
             Label lblTargetTitle = new()
             {
+                BackColor = Color.Transparent,
                 Text = "Target a Specific Application",
                 Font = new Font("Segoe UI", 10.5F, FontStyle.Bold),
                 ForeColor = DarkColors.Primary,
@@ -185,6 +189,7 @@ namespace ITHelpdeskToolkit.UI.Views
             // Details Log Console
             Label lblDetails = new()
             {
+                BackColor = Color.Transparent,
                 Text = "Details",
                 Font = new Font("Segoe UI", 12F, FontStyle.Bold),
                 ForeColor = DarkColors.TextMain,
