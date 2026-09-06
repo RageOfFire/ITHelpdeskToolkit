@@ -52,12 +52,24 @@ namespace ITHelpdeskToolkit.UI.Views
             };
             Controls.Add(lblSub);
 
-            // Path picker row
-            _txtPath = new TextBox
+            // Path picker row — using the same FlowLayoutPanel pattern already proven to
+            // render correctly elsewhere in this app (see ExcelView's action row). The
+            // earlier TableLayoutPanel with auto-size columns was mis-measuring the custom
+            // ModernButton control and collapsing the button columns to zero width.
+            FlowLayoutPanel pathRow = new()
             {
                 Location = new Point(0, 80),
-                Size = new Size(560, 30),
+                Size = new Size(950, 40),
                 Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
+                WrapContents = false
+            };
+            Controls.Add(pathRow);
+
+            _txtPath = new TextBox
+            {
+                Width = 620,
+                Height = 30,
+                Margin = new Padding(0, 3, 10, 0),
                 ReadOnly = true,
                 BackColor = DarkColors.InputBg,
                 ForeColor = DarkColors.TextMain,
@@ -65,29 +77,26 @@ namespace ITHelpdeskToolkit.UI.Views
                 BorderStyle = BorderStyle.FixedSingle,
                 PlaceholderText = "No file or folder selected..."
             };
-            Controls.Add(_txtPath);
+            pathRow.Controls.Add(_txtPath);
 
             _btnBrowseFile = new ModernButton
             {
                 Text = "📄 Choose File",
                 Style = ButtonStyle.Secondary,
                 Width = 130,
-                Location = new Point(570, 78),
-                Anchor = AnchorStyles.Top | AnchorStyles.Right
+                Margin = new Padding(0, 0, 10, 0)
             };
             _btnBrowseFile.Click += (s, e) => BrowseFile();
-            Controls.Add(_btnBrowseFile);
+            pathRow.Controls.Add(_btnBrowseFile);
 
             _btnBrowseFolder = new ModernButton
             {
                 Text = "📁 Choose Folder",
                 Style = ButtonStyle.Secondary,
-                Width = 140,
-                Location = new Point(710, 78),
-                Anchor = AnchorStyles.Top | AnchorStyles.Right
+                Width = 140
             };
             _btnBrowseFolder.Click += (s, e) => BrowseFolder();
-            Controls.Add(_btnBrowseFolder);
+            pathRow.Controls.Add(_btnBrowseFolder);
 
             // Scan action row
             FlowLayoutPanel actionPanel = new()
