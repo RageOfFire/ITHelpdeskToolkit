@@ -3,11 +3,27 @@ name: Build ITHelpdeskToolkit
 on:
   push:
     branches: [ main, master ]
+    tags: [ 'v*.*.*' ]
   workflow_dispatch:
+    inputs:
+      create_release:
+        description: 'Create a GitHub Release from this run'
+        type: boolean
+        default: false
 
 jobs:
   build:
     runs-on: windows-latest
+    strategy:
+      matrix:
+        include:
+          - mode: self-contained
+            self-contained: true
+            artifact-suffix: selfcontained-win-x64
+          - mode: framework-dependent
+            self-contained: false
+            artifact-suffix: framework-dependent-win-x64
+
     steps:
       - uses: actions/checkout@v4
 
@@ -16,15 +32,70 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      - name: Publish self-contained (multi-file, bundles .NET 8 runtime)
+      # Used for both the artifact/zip filenames and (when tagged) the release version.
+      - name: Determine version
+        id: version
+        shell: bash
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            VERSION="${GITHUB_REF#refs/tags/v}"
+          else
+            VERSION="0.0.0-ci.${GITHUB_RUN_NUMBER}"
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Publish (${{ matrix.mode }})
         run: >
           dotnet publish ITHelpdeskToolkit.csproj
-          -c Release -r win-x64 --self-contained true
-          -p:PublishSingleFile=false
+          -c Release -r win-x64
+          --self-contained ${{ matrix.self-contained }}
+          -p:Version=${{ steps.version.outputs.version }}
           -o publish
+
+      - name: Zip published output
+        shell: pwsh
+        run: |
+          $zipName = "ITHelpdeskToolkit-${{ steps.version.outputs.version }}-${{ matrix.artifact-suffix }}.zip"
+          Compress-Archive -Path publish\* -DestinationPath $zipName
+          echo "ZIP_NAME=$zipName" >> $env:GITHUB_ENV
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ITHelpdeskToolkit-win-x64
-          path: publish/
+          name: ITHelpdeskToolkit-${{ matrix.artifact-suffix }}
+          path: ${{ env.ZIP_NAME }}
+
+      - name: Stash zip for release job
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-zips
+          path: ${{ env.ZIP_NAME }}
+          retention-days: 1
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    # Only cut a release on a version tag push, or when explicitly requested via workflow_dispatch.
+    if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && github.event.inputs.create_release == 'true')
+    permissions:
+      contents: write
+    steps:
+      - name: Download built zips
+        uses: actions/download-artifact@v4
+        with:
+          name: release-zips
+          path: release-zips
+          merge-multiple: true
+
+      - name: List downloaded files
+        run: ls -la release-zips
+
+      - name: Create/Update GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('build-{0}', github.run_number) }}
+          name: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('Manual build {0}', github.run_number) }}
+          draft: false
+          prerelease: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+          generate_release_notes: true
+          files: release-zips/*.zip

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -182,9 +183,17 @@ namespace ITHelpdeskToolkit.UI.Views
             btnOpenFolder.Click += (s, e) => OpenDataFolder();
             targetButtons.Controls.Add(btnOpenFolder);
 
-            ModernButton btnLaunchAdmin = new() { Text = "🛡 Launch as Admin...", Width = 160 };
-            btnLaunchAdmin.Click += async (s, e) => await LaunchAsAdminAsync();
-            targetButtons.Controls.Add(btnLaunchAdmin);
+            ModernButton btnFolderFix = new() { Text = "📁 Allow Without Admin (Folder Fix)", Width = 260, Margin = new Padding(0, 0, 8, 0) };
+            btnFolderFix.Click += async (s, e) => await AllowAppToRunWithoutAdminAsync();
+            targetButtons.Controls.Add(btnFolderFix);
+
+            ModernButton btnGrantPermission = new() { Text = "🔑 Grant User Permission...", Width = 200, Margin = new Padding(0, 0, 8, 0) };
+            btnGrantPermission.Click += async (s, e) => await GrantUserPermissionAsync();
+            targetButtons.Controls.Add(btnGrantPermission);
+
+            ModernButton btnRevokePermission = new() { Text = "🚫 Revoke Permission...", Width = 170 };
+            btnRevokePermission.Click += async (s, e) => await RevokeUserPermissionAsync();
+            targetButtons.Controls.Add(btnRevokePermission);
 
             // Details Log Console
             Label lblDetails = new()
@@ -296,19 +305,163 @@ namespace ITHelpdeskToolkit.UI.Views
             ShowTargetResult($"Open Data Folder: {name}", success, output);
         }
 
-        private async Task LaunchAsAdminAsync()
+        private async Task AllowAppToRunWithoutAdminAsync()
         {
+            if (!ShellService.IsAdmin())
+            {
+                MessageBox.Show(
+                    "This tool needs to be running as Administrator to change folder permissions (one-time setup).\r\n\r\nRestart it with 'Run as administrator' and try again.",
+                    "Administrator Required",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                return;
+            }
+
             using OpenFileDialog ofd = new()
             {
-                Title = "Choose an application (.exe)",
+                Title = "Choose the application (.exe) that shouldn't need admin to run",
                 Filter = "Applications (*.exe)|*.exe|All files (*.*)|*.*"
             };
 
-            if (ofd.ShowDialog() == DialogResult.OK)
+            if (ofd.ShowDialog() != DialogResult.OK) return;
+
+            string? folder = Path.GetDirectoryName(ofd.FileName);
+            DialogResult confirm = MessageBox.Show(
+                $"This will grant '{Environment.UserName}' Modify access to the app's install folder:\r\n\r\n{folder}\r\n\r\n" +
+                "(and everything inside it) so the app can read/write its own files there without needing " +
+                "to run elevated.\r\n\r\nContinue?",
+                "Allow App to Run Without Admin",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question);
+
+            if (confirm != DialogResult.Yes) return;
+
+            var (success, output) = await AppRepairService.AllowAppToRunWithoutAdminAsync(ofd.FileName);
+            ShowTargetResult($"Allow Without Admin: {ofd.FileName}", success, output);
+        }
+
+        private async Task GrantUserPermissionAsync()
+        {
+            if (!ShellService.IsAdmin())
             {
-                var (success, output) = await AppRepairService.LaunchAsAdminAsync(ofd.FileName);
-                ShowTargetResult($"Launch as Admin: {ofd.FileName}", success, output);
+                MessageBox.Show(
+                    "This tool needs to be running as Administrator to grant the permission (one-time setup).\r\n\r\nRestart it with 'Run as administrator' and try again.",
+                    "Administrator Required",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                return;
             }
+
+            using OpenFileDialog ofd = new()
+            {
+                Title = "Choose the application (.exe) the user should be able to open elevated",
+                Filter = "Applications (*.exe)|*.exe|All files (*.*)|*.*"
+            };
+
+            if (ofd.ShowDialog() != DialogResult.OK) return;
+
+            DialogResult confirm = MessageBox.Show(
+                $"This will let the current user ('{Environment.UserName}') open:\r\n\r\n{ofd.FileName}\r\n\r\n" +
+                "...elevated, whenever they want, without typing an admin password or seeing a UAC prompt.\r\n\r\n" +
+                "It does this via a Scheduled Task (runs as SYSTEM) — the user is NOT made an admin.\r\n\r\nContinue?",
+                "Grant Launch Permission",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question);
+
+            if (confirm != DialogResult.Yes) return;
+
+            var (success, output, taskName) = await AppRepairService.GrantUserLaunchPermissionAsync(ofd.FileName);
+            ShowTargetResult($"Grant User Permission: {ofd.FileName}", success, output);
+
+            if (success && !string.IsNullOrWhiteSpace(taskName))
+            {
+                DialogResult shortcutPrompt = MessageBox.Show(
+                    "Create a desktop shortcut for the user so they can just double-click it instead of using the command line?",
+                    "Create Shortcut",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Question);
+
+                if (shortcutPrompt == DialogResult.Yes)
+                {
+                    var (shortcutSuccess, shortcutOutput) = AppRepairService.CreateLaunchShortcut(
+                        taskName, Path.GetFileNameWithoutExtension(ofd.FileName));
+
+                    _txtDetails.AppendText($"\r\n\r\n{new string('-', 60)}\r\n{shortcutOutput}");
+                    if (!shortcutSuccess)
+                    {
+                        MessageBox.Show(shortcutOutput, "Shortcut Failed", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    }
+                }
+            }
+        }
+
+        private async Task RevokeUserPermissionAsync()
+        {
+            if (!ShellService.IsAdmin())
+            {
+                MessageBox.Show(
+                    "This tool needs to be running as Administrator to revoke the permission.",
+                    "Administrator Required",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                return;
+            }
+
+            string? taskName = PromptForText(
+                "Revoke Launch Permission",
+                "Enter the exact Scheduled Task name to remove\r\n(shown in the result text after granting permission, e.g. 'IT-Helpdesk-Elevated-app-username'):");
+
+            if (string.IsNullOrWhiteSpace(taskName)) return;
+
+            var (success, output) = await AppRepairService.RevokeUserLaunchPermissionAsync(taskName.Trim());
+            ShowTargetResult($"Revoke Permission: {taskName}", success, output);
+        }
+
+        private static string? PromptForText(string title, string prompt)
+        {
+            using Form dlg = new()
+            {
+                Text = title,
+                StartPosition = FormStartPosition.CenterParent,
+                FormBorderStyle = FormBorderStyle.FixedDialog,
+                MinimizeBox = false,
+                MaximizeBox = false,
+                ClientSize = new Size(420, 150),
+                BackColor = DarkColors.Background
+            };
+
+            Label lbl = new()
+            {
+                Text = prompt,
+                AutoSize = false,
+                Size = new Size(390, 55),
+                Location = new Point(15, 12),
+                ForeColor = DarkColors.TextMain
+            };
+            dlg.Controls.Add(lbl);
+
+            TextBox txt = new()
+            {
+                Location = new Point(15, 72),
+                Size = new Size(390, 26),
+                BackColor = DarkColors.InputBg,
+                ForeColor = DarkColors.TextMain,
+                BorderStyle = BorderStyle.FixedSingle
+            };
+            dlg.Controls.Add(txt);
+
+            ModernButton btnOk = new() { Text = "OK", Width = 90, Location = new Point(225, 108) };
+            btnOk.Click += (s, e) => { dlg.DialogResult = DialogResult.OK; dlg.Close(); };
+            dlg.Controls.Add(btnOk);
+
+            ModernButton btnCancel = new() { Text = "Cancel", Width = 90, Location = new Point(320, 108) };
+            btnCancel.Click += (s, e) => { dlg.DialogResult = DialogResult.Cancel; dlg.Close(); };
+            dlg.Controls.Add(btnCancel);
+
+            dlg.AcceptButton = btnOk;
+            dlg.CancelButton = btnCancel;
+
+            return dlg.ShowDialog() == DialogResult.OK ? txt.Text : null;
         }
 
         private void ShowTargetResult(string title, bool success, string output)

@@ -191,15 +191,158 @@ namespace ITHelpdeskToolkit.Services
             }
         }
 
-        public static async Task<(bool Success, string Output)> LaunchAsAdminAsync(string exePath)
+        /// <summary>
+        /// Creates a Scheduled Task that launches the given app elevated (as SYSTEM, "highest privileges"),
+        /// then grants the current logged-in user permission to *run* that task. This lets a standard user
+        /// launch one specific admin-only app afterward without a UAC prompt and without being made an admin.
+        /// Must be run elevated (the tool itself needs admin rights to create the task and edit its ACL).
+        /// </summary>
+        /// <summary>
+        /// Grants the current user Modify rights on the app's install folder (and its HKLM registry key,
+        /// if present) so it no longer needs to run elevated. This is the fix for apps that only demand
+        /// admin/UAC because they try to write config/log/data files next to their own .exe inside a
+        /// protected location like Program Files. Must be run elevated once to change the ACLs.
+        /// </summary>
+        public static async Task<(bool Success, string Output)> AllowAppToRunWithoutAdminAsync(string exePath)
         {
             if (string.IsNullOrWhiteSpace(exePath))
                 return (false, "Choose an application (.exe) first.");
             if (!File.Exists(exePath))
                 return (false, "That file does not exist.");
+            if (!ShellService.IsAdmin())
+                return (false, "This tool must be running as Administrator to change folder permissions (one-time setup).");
 
-            string safePath = exePath.Replace("\"", "\"\"");
-            return await ShellService.RunPowerShellAsync($"Start-Process -FilePath \"{safePath}\" -Verb RunAs", 15);
+            string? folder = Path.GetDirectoryName(exePath);
+            if (string.IsNullOrWhiteSpace(folder) || !Directory.Exists(folder))
+                return (false, "Could not determine the application's install folder.");
+
+            string userAccount = $"{Environment.UserDomainName}\\{Environment.UserName}";
+            string safeFolder = folder.Replace("\"", "\"\"");
+
+            // (OI)(CI)M = apply to this folder, subfolders and files, grant Modify.
+            string command = $"icacls \"{safeFolder}\" /grant \"{userAccount}\":(OI)(CI)M /T /C";
+            var (success, output) = await ShellService.RunRepairCommandAsync(command, 120, admin: true);
+
+            if (!success)
+                return (false, output);
+
+            return (true,
+                $"Granted '{Environment.UserName}' Modify access to:\r\n{folder}\r\n(and all files/subfolders inside it)\r\n\r\n" +
+                "If the app still asks for admin after this, it's probably also writing to a protected " +
+                "registry key (e.g. under HKEY_LOCAL_MACHINE) or requesting elevation via its own manifest " +
+                "(check Properties > Compatibility > 'Run this program as an administrator' — untick that too), " +
+                "rather than just the install folder.\r\n\r\n" +
+                $"icacls output:\r\n{output}");
+        }
+
+        public static async Task<(bool Success, string Output, string TaskName)> GrantUserLaunchPermissionAsync(string exePath)
+        {
+            if (string.IsNullOrWhiteSpace(exePath))
+                return (false, "Choose an application (.exe) first.", "");
+            if (!File.Exists(exePath))
+                return (false, "That file does not exist.", "");
+            if (!ShellService.IsAdmin())
+                return (false, "This tool must be running as Administrator to grant launch permissions (it needs to create the Scheduled Task once).", "");
+
+            string appName = Path.GetFileNameWithoutExtension(exePath);
+            string userName = Environment.UserName;
+            string taskName = $"IT-Helpdesk-Elevated-{appName}-{userName}";
+            string safePath = exePath.Replace("'", "''");
+            string userAccount = $"{Environment.UserDomainName}\\{userName}".Replace("'", "''");
+            string safeTaskName = taskName.Replace("'", "''");
+
+            string psScript = $@"
+$ErrorActionPreference = 'Stop'
+$taskName = '{safeTaskName}'
+$exePath  = '{safePath}'
+
+Unregister-ScheduledTask -TaskName $taskName -Confirm:$false -ErrorAction SilentlyContinue
+
+$action    = New-ScheduledTaskAction -Execute $exePath
+$principal = New-ScheduledTaskPrincipal -UserId 'SYSTEM' -LogonType ServiceAccount -RunLevel Highest
+$settings  = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries
+
+Register-ScheduledTask -TaskName $taskName -Action $action -Principal $principal -Settings $settings | Out-Null
+
+$service = New-Object -ComObject 'Schedule.Service'
+$service.Connect()
+$folder = $service.GetFolder('\')
+$task = $folder.GetTask($taskName)
+$sd = $task.GetSecurityDescriptor(0xF)
+
+$sid = (New-Object System.Security.Principal.NTAccount('{userAccount}')).Translate([System.Security.Principal.SecurityIdentifier]).Value
+$ace = ""(A;;GRGX;;;$sid)""
+if ($sd -notmatch [regex]::Escape($ace)) {{
+    $sd = $sd + $ace
+}}
+$task.SetSecurityDescriptor($sd, 0)
+
+Write-Output ""OK""
+";
+
+            var (success, output) = await ShellService.RunPowerShellAsync(psScript, 30);
+            if (!success)
+                return (false, output, "");
+
+            string msg =
+                $"Granted '{userName}' permission to launch '{Path.GetFileName(exePath)}' elevated, without a UAC prompt.\r\n\r\n" +
+                $"Scheduled task created: {taskName}\r\n\r\n" +
+                "The user can now run it any time (as themselves, no admin password needed) with:\r\n" +
+                $"  schtasks /Run /TN \"{taskName}\"\r\n\r\n" +
+                "Use 'Create Desktop Shortcut' to give them a clickable icon that runs that command, or 'Revoke Permission' below to undo this later.";
+
+            return (true, msg, taskName);
+        }
+
+        /// <summary>
+        /// Removes a previously created elevated-launch scheduled task, revoking the permission.
+        /// </summary>
+        public static async Task<(bool Success, string Output)> RevokeUserLaunchPermissionAsync(string taskName)
+        {
+            if (string.IsNullOrWhiteSpace(taskName))
+                return (false, "Enter the scheduled task name to remove.");
+            if (!ShellService.IsAdmin())
+                return (false, "This tool must be running as Administrator to revoke this.");
+
+            string safeName = taskName.Replace("\"", "");
+            return await ShellService.RunCommandAsync($"schtasks /Delete /TN \"{safeName}\" /F", 15);
+        }
+
+        /// <summary>
+        /// Creates a desktop shortcut for the current user that triggers the elevated scheduled task.
+        /// Does not require admin rights (creating a shortcut in the user's own Desktop folder).
+        /// </summary>
+        public static (bool Success, string Output) CreateLaunchShortcut(string taskName, string appDisplayName)
+        {
+            if (string.IsNullOrWhiteSpace(taskName))
+                return (false, "No scheduled task name provided.");
+
+            try
+            {
+                string desktop = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
+                string safeDisplayName = string.IsNullOrWhiteSpace(appDisplayName) ? taskName : appDisplayName;
+                foreach (char c in Path.GetInvalidFileNameChars())
+                    safeDisplayName = safeDisplayName.Replace(c, '_');
+                string shortcutPath = Path.Combine(desktop, $"{safeDisplayName} (Admin).lnk");
+
+                Type? shellType = Type.GetTypeFromProgID("WScript.Shell");
+                if (shellType == null)
+                    return (false, "Could not create shortcut (WScript.Shell is unavailable on this system).");
+
+                dynamic shell = Activator.CreateInstance(shellType)!;
+                dynamic shortcut = shell.CreateShortcut(shortcutPath);
+                shortcut.TargetPath = Environment.ExpandEnvironmentVariables(@"%WinDir%\System32\schtasks.exe");
+                shortcut.Arguments = $"/Run /TN \"{taskName}\"";
+                shortcut.WorkingDirectory = desktop;
+                shortcut.Description = $"Launch {safeDisplayName} elevated without a UAC prompt";
+                shortcut.Save();
+
+                return (true, $"Desktop shortcut created:\r\n{shortcutPath}");
+            }
+            catch (Exception ex)
+            {
+                return (false, ex.Message);
+            }
         }
 
         public static List<RepairActionItem> GetGeneralAppFixes()

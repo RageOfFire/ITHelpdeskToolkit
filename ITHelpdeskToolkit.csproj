@@ -9,11 +9,15 @@
     <ApplicationIcon>Assets\ITHelpdeskToolkit.ico</ApplicationIcon>
     <AssemblyName>ITHelpdeskToolkit</AssemblyName>
     <RootNamespace>ITHelpdeskToolkit</RootNamespace>
+    <!-- NPOI bundles the Open Source Media Framework (icon/format metadata); this accepts its EULA. -->
+    <AcceptNPOIOSMFLicense>true</AcceptNPOIOSMFLicense>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="System.Management" Version="8.0.0" />
     <PackageReference Include="System.ServiceProcess.ServiceController" Version="8.0.0" />
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+    <PackageReference Include="NPOI" Version="2.8.0" />
   </ItemGroup>
 
 </Project>

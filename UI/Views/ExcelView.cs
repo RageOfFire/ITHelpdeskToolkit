@@ -240,6 +240,9 @@ namespace ITHelpdeskToolkit.UI.Views
 
         private async Task ConvertXlsDialogAsync()
         {
+            ExcelConvertEngine? engine = PromptForEngine();
+            if (engine == null) return;
+
             using OpenFileDialog ofd = new()
             {
                 Title = "Select .xls file(s) to convert to .xlsx",
@@ -249,8 +252,8 @@ namespace ITHelpdeskToolkit.UI.Views
 
             if (ofd.ShowDialog() == DialogResult.OK && ofd.FileNames.Length > 0)
             {
-                _txtDetails.Text = $"Starting conversion of {ofd.FileNames.Length} .xls file(s)...\r\n\r\n";
-                var (ok, summary, details) = await ExcelRepairService.ConvertXlsToXlsxBatchAsync(ofd.FileNames);
+                _txtDetails.Text = $"Starting conversion of {ofd.FileNames.Length} .xls file(s) using the {engine} engine...\r\n\r\n";
+                var (ok, summary, details) = await ExcelRepairService.ConvertXlsToXlsxBatchAsync(ofd.FileNames, engine.Value);
 
                 StringBuilder sb = new();
                 sb.AppendLine("File Conversion Results");
@@ -261,6 +264,73 @@ namespace ITHelpdeskToolkit.UI.Views
 
                 MessageBox.Show(summary, ok ? "Conversion Complete" : "Conversion Finished with Issues", MessageBoxButtons.OK, ok ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
             }
+        }
+
+        private static ExcelConvertEngine? PromptForEngine()
+        {
+            using Form dlg = new()
+            {
+                Text = "Choose Conversion Engine",
+                StartPosition = FormStartPosition.CenterParent,
+                FormBorderStyle = FormBorderStyle.FixedDialog,
+                MinimizeBox = false,
+                MaximizeBox = false,
+                ClientSize = new Size(430, 210),
+                BackColor = DarkColors.Background
+            };
+
+            Label lbl = new()
+            {
+                Text = "Which engine should convert the file(s)? Neither requires Microsoft Excel.",
+                AutoSize = false,
+                Size = new Size(400, 40),
+                Location = new Point(15, 12),
+                ForeColor = DarkColors.TextMain
+            };
+            dlg.Controls.Add(lbl);
+
+            RadioButton radNpoi = new()
+            {
+                Text = "NPOI — nothing to install, fastest (best-effort formatting)",
+                AutoSize = true,
+                Checked = true,
+                Location = new Point(18, 58),
+                ForeColor = DarkColors.TextMain
+            };
+            dlg.Controls.Add(radNpoi);
+
+            RadioButton radLibreOffice = new()
+            {
+                Text = "LibreOffice (headless) — requires LibreOffice installed,",
+                AutoSize = true,
+                Location = new Point(18, 86),
+                ForeColor = DarkColors.TextMain
+            };
+            dlg.Controls.Add(radLibreOffice);
+
+            Label lblLoSub = new()
+            {
+                Text = "highest fidelity (charts, images, formatting all preserved)",
+                AutoSize = true,
+                Location = new Point(38, 108),
+                ForeColor = DarkColors.TextMuted,
+                Font = new Font("Segoe UI", 8F)
+            };
+            dlg.Controls.Add(lblLoSub);
+
+            ModernButton btnOk = new() { Text = "Convert", Width = 100, Location = new Point(215, 160) };
+            btnOk.Click += (s, e) => { dlg.DialogResult = DialogResult.OK; dlg.Close(); };
+            dlg.Controls.Add(btnOk);
+
+            ModernButton btnCancel = new() { Text = "Cancel", Width = 100, Location = new Point(320, 160) };
+            btnCancel.Click += (s, e) => { dlg.DialogResult = DialogResult.Cancel; dlg.Close(); };
+            dlg.Controls.Add(btnCancel);
+
+            dlg.AcceptButton = btnOk;
+            dlg.CancelButton = btnCancel;
+
+            if (dlg.ShowDialog() != DialogResult.OK) return null;
+            return radLibreOffice.Checked ? ExcelConvertEngine.LibreOffice : ExcelConvertEngine.Npoi;
         }
 
         private async Task RepairWorkbookDialogAsync()
