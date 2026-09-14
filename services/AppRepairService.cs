@@ -345,6 +345,88 @@ Write-Output ""OK""
             }
         }
 
+        // Registry path behind gpedit.msc > Computer Configuration > Administrative Templates >
+        // Windows Components > Windows Update > "Configure Automatic Updates". Writing here has the
+        // exact same effect as setting that policy through the Group Policy editor, so it also works
+        // on Windows editions (e.g. Home) where gpedit.msc itself isn't available.
+        private const string WindowsUpdatePolicyKey = @"HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU";
+
+        /// <summary>
+        /// Option 1: fully turn Windows Update off. Equivalent to setting "Configure Automatic Updates"
+        /// to Disabled in gpedit.msc — no automatic checking, downloading, or installing of updates.
+        /// </summary>
+        public static async Task<(bool Success, string Output)> DisableWindowsUpdateFullyAsync()
+        {
+            string command = $"reg add \"{WindowsUpdatePolicyKey}\" /v NoAutoUpdate /t REG_DWORD /d 1 /f";
+            var (success, output) = await ShellService.RunRepairCommandAsync(command, 30, admin: true);
+            if (!success) return (false, output);
+
+            return (true,
+                "Windows Update has been turned off completely — automatic checking, downloading, and " +
+                "installing of updates is now disabled.\r\n\r\n" +
+                "Equivalent gpedit.msc setting:\r\nComputer Configuration > Administrative Templates > " +
+                "Windows Components > Windows Update > \"Configure Automatic Updates\" = Disabled\r\n\r\n" + output);
+        }
+
+        /// <summary>
+        /// Option 2: keep automatic download and notification, but never auto-install.
+        /// Equivalent to "Configure Automatic Updates" = Enabled, option 3
+        /// ("Auto download and notify for install") in gpedit.msc.
+        /// </summary>
+        public static async Task<(bool Success, string Output)> SetWindowsUpdateAutoDownloadNotifyInstallAsync()
+        {
+            string command = $"reg add \"{WindowsUpdatePolicyKey}\" /v NoAutoUpdate /t REG_DWORD /d 0 /f & " +
+                              $"reg add \"{WindowsUpdatePolicyKey}\" /v AUOptions /t REG_DWORD /d 3 /f";
+            var (success, output) = await ShellService.RunRepairCommandAsync(command, 30, admin: true);
+            if (!success) return (false, output);
+
+            return (true,
+                "Windows Update will now auto-download updates in the background but will NOT install " +
+                "them — the user is only notified once updates are ready to install.\r\n\r\n" +
+                "Equivalent gpedit.msc setting:\r\nComputer Configuration > Administrative Templates > " +
+                "Windows Components > Windows Update > \"Configure Automatic Updates\" = Enabled, option 3 " +
+                "(\"Auto download and notify for install\")\r\n\r\n" + output);
+        }
+
+        /// <summary>
+        /// Option 3: no auto-download and no auto-install — only notify. Equivalent to
+        /// "Configure Automatic Updates" = Enabled, option 2 ("Notify for download and notify for
+        /// install") in gpedit.msc.
+        /// </summary>
+        public static async Task<(bool Success, string Output)> SetWindowsUpdateNotifyOnlyAsync()
+        {
+            string command = $"reg add \"{WindowsUpdatePolicyKey}\" /v NoAutoUpdate /t REG_DWORD /d 0 /f & " +
+                              $"reg add \"{WindowsUpdatePolicyKey}\" /v AUOptions /t REG_DWORD /d 2 /f";
+            var (success, output) = await ShellService.RunRepairCommandAsync(command, 30, admin: true);
+            if (!success) return (false, output);
+
+            return (true,
+                "Windows Update will now only notify about available updates — nothing is downloaded or " +
+                "installed automatically; the user has to trigger both manually.\r\n\r\n" +
+                "Equivalent gpedit.msc setting:\r\nComputer Configuration > Administrative Templates > " +
+                "Windows Components > Windows Update > \"Configure Automatic Updates\" = Enabled, option 2 " +
+                "(\"Notify for download and notify for install\")\r\n\r\n" + output);
+        }
+
+        /// <summary>
+        /// Removes the policy values set by the three options above, restoring Windows Update to its
+        /// default, OS-managed behavior. Equivalent to setting "Configure Automatic Updates" back to
+        /// Not Configured in gpedit.msc.
+        /// </summary>
+        public static async Task<(bool Success, string Output)> RestoreWindowsUpdateDefaultsAsync()
+        {
+            // "reg delete /v" exits non-zero when the value isn't present, which just means there was
+            // nothing to restore — chain with "& exit /b 0" so that isn't reported as a failure.
+            string command = $"(reg delete \"{WindowsUpdatePolicyKey}\" /v NoAutoUpdate /f) & " +
+                              $"(reg delete \"{WindowsUpdatePolicyKey}\" /v AUOptions /f) & exit /b 0";
+            var (_, output) = await ShellService.RunRepairCommandAsync(command, 30, admin: true);
+
+            return (true,
+                "Windows Update policy overrides have been removed — Windows Update is back to its " +
+                "default, OS-managed behavior (equivalent to \"Configure Automatic Updates\" = Not " +
+                "Configured in gpedit.msc).\r\n\r\n" + output);
+        }
+
         public static List<RepairActionItem> GetGeneralAppFixes()
         {
             return new List<RepairActionItem>

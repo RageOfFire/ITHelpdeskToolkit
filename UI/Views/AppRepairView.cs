@@ -19,6 +19,7 @@ namespace ITHelpdeskToolkit.UI.Views
         private readonly TextBox _txtTargetApp;
         private readonly ModernButton _btnRunAll;
         private readonly ModernButton _btnRunSelected;
+        private readonly ComboBox _cmbWuPolicy;
         private readonly List<RepairActionItem> _actions;
 
         public AppRepairView()
@@ -70,7 +71,8 @@ namespace ITHelpdeskToolkit.UI.Views
             {
                 Location = new Point(0, 98),
                 Size = new Size(950, 40),
-                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
+                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
+                WrapContents = false
             };
             Controls.Add(toolBar);
 
@@ -92,6 +94,51 @@ namespace ITHelpdeskToolkit.UI.Views
             };
             _btnRunSelected.Click += async (s, e) => await RunSelectedFixAsync();
             toolBar.Controls.Add(_btnRunSelected);
+
+            // Windows Update Policy dropdown — same registry key gpedit.msc's "Configure Automatic
+            // Updates" policy writes to. Placed in the same toolbar row, to the right of the buttons above.
+            Label lblWuPolicy = new()
+            {
+                BackColor = Color.Transparent,
+                Text = "Windows Update Policy:",
+                Font = new Font("Segoe UI", 9.5F),
+                ForeColor = DarkColors.TextMuted,
+                AutoSize = true,
+                Margin = new Padding(25, 10, 6, 0)
+            };
+            toolBar.Controls.Add(lblWuPolicy);
+
+            _cmbWuPolicy = new ComboBox
+            {
+                Size = new Size(260, 26),
+                Font = new Font("Segoe UI", 9.5F),
+                DropDownStyle = ComboBoxStyle.DropDownList,
+                BackColor = DarkColors.InputBg,
+                ForeColor = DarkColors.TextMain,
+                FlatStyle = FlatStyle.Flat,
+                Margin = new Padding(0, 6, 8, 0)
+            };
+            _cmbWuPolicy.Items.AddRange(new object[]
+            {
+                "Turn Off Completely (Disabled)",
+                "Auto-Download, Notify Before Install",
+                "Notify Only (No Auto-Download/Install)",
+                "Restore Defaults (Not Configured)"
+            });
+            _cmbWuPolicy.SelectedIndex = 0;
+            ToolTip wuTip = new();
+            wuTip.SetToolTip(_cmbWuPolicy, "gpedit.msc equivalent: Windows Components > Windows Update > \"Configure Automatic Updates\". Needs Administrator.");
+            toolBar.Controls.Add(_cmbWuPolicy);
+
+            ModernButton btnWuApply = new()
+            {
+                Text = "Apply",
+                Style = ButtonStyle.Primary,
+                Width = 85
+            };
+            wuTip.SetToolTip(btnWuApply, "gpedit.msc equivalent: Windows Components > Windows Update > \"Configure Automatic Updates\". Needs Administrator.");
+            btnWuApply.Click += async (s, e) => await ApplyWindowsUpdatePolicyAsync();
+            toolBar.Controls.Add(btnWuApply);
 
             // Table Grid
             _grid = new DataGridView
@@ -415,6 +462,49 @@ namespace ITHelpdeskToolkit.UI.Views
 
             var (success, output) = await AppRepairService.RevokeUserLaunchPermissionAsync(taskName.Trim());
             ShowTargetResult($"Revoke Permission: {taskName}", success, output);
+        }
+
+        private async Task ApplyWindowsUpdatePolicyAsync()
+        {
+            (string Title, string ConfirmMessage, Func<Task<(bool Success, string Output)>> Action) selected = _cmbWuPolicy.SelectedIndex switch
+            {
+                0 => ("Turn Off Windows Update Completely",
+                      "This fully disables Windows Update — no automatic checking, downloading, or installing of updates.\r\n\r\n" +
+                      "gpedit.msc equivalent: \"Configure Automatic Updates\" = Disabled",
+                      AppRepairService.DisableWindowsUpdateFullyAsync),
+                1 => ("Auto-Download, Notify Before Install",
+                      "Updates will keep downloading and notifying automatically, but will NOT be installed automatically.\r\n\r\n" +
+                      "gpedit.msc equivalent: \"Configure Automatic Updates\" = Enabled, option 3 (\"Auto download and notify for install\")",
+                      AppRepairService.SetWindowsUpdateAutoDownloadNotifyInstallAsync),
+                2 => ("Notify Only (No Download, No Install)",
+                      "Updates will only be reported as available — nothing is downloaded or installed automatically.\r\n\r\n" +
+                      "gpedit.msc equivalent: \"Configure Automatic Updates\" = Enabled, option 2 (\"Notify for download and notify for install\")",
+                      AppRepairService.SetWindowsUpdateNotifyOnlyAsync),
+                3 => ("Restore Windows Update Defaults",
+                      "Removes the policy overrides above and returns Windows Update to its normal, OS-managed behavior.\r\n\r\n" +
+                      "gpedit.msc equivalent: \"Configure Automatic Updates\" = Not Configured",
+                      AppRepairService.RestoreWindowsUpdateDefaultsAsync),
+                _ => (string.Empty, string.Empty, null)
+            };
+
+            if (selected.Action == null) return;
+
+            await RunWindowsUpdatePolicyAsync(selected.Title, selected.ConfirmMessage, selected.Action);
+        }
+
+        private async Task RunWindowsUpdatePolicyAsync(string title, string confirmMessage, Func<Task<(bool Success, string Output)>> action)
+        {
+            DialogResult confirm = MessageBox.Show(
+                $"{confirmMessage}\r\n\r\nThis changes a machine-wide policy and will prompt for Administrator " +
+                "permission if this tool isn't already running elevated.\r\n\r\nContinue?",
+                title,
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question);
+
+            if (confirm != DialogResult.Yes) return;
+
+            var (success, output) = await action();
+            ShowTargetResult(title, success, output);
         }
 
         private static string? PromptForText(string title, string prompt)
