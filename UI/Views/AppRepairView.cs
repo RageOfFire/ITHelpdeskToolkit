@@ -182,7 +182,7 @@ namespace ITHelpdeskToolkit.UI.Views
             CardPanel targetCard = new()
             {
                 Location = new Point(0, 325),
-                Size = new Size(950, 90),
+                Size = new Size(950, 165),
                 Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
                 Padding = new Padding(15, 10, 15, 10)
             };
@@ -201,8 +201,8 @@ namespace ITHelpdeskToolkit.UI.Views
 
             _txtTargetApp = new TextBox
             {
-                Location = new Point(15, 40),
-                Size = new Size(220, 26),
+                Location = new Point(15, 38),
+                Size = new Size(280, 26),
                 Font = new Font("Segoe UI", 10F),
                 BackColor = DarkColors.InputBg,
                 ForeColor = DarkColors.TextMain,
@@ -211,36 +211,52 @@ namespace ITHelpdeskToolkit.UI.Views
             };
             targetCard.Controls.Add(_txtTargetApp);
 
-            FlowLayoutPanel targetButtons = new()
+            // Two explicit rows, each spanning (almost) the full card width, instead
+            // of one fixed-size FlowLayoutPanel squeezed next to the textbox. The old
+            // 690px-wide panel couldn't fit all 6 buttons on one line, so most of them
+            // wrapped to a second row that the card's fixed 90px height then clipped —
+            // that's why only the first 3 buttons were ever visible.
+            FlowLayoutPanel targetButtonsRow1 = new()
             {
-                Location = new Point(245, 36),
-                Size = new Size(690, 40)
+                Location = new Point(15, 72),
+                Size = new Size(920, 36),
+                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
+                WrapContents = false
             };
-            targetCard.Controls.Add(targetButtons);
+            targetCard.Controls.Add(targetButtonsRow1);
 
             ModernButton btnForceClose = new() { Text = "🛑 Force Close", Width = 125, Margin = new Padding(0, 0, 8, 0) };
             btnForceClose.Click += async (s, e) => await ForceCloseAppAsync();
-            targetButtons.Controls.Add(btnForceClose);
+            targetButtonsRow1.Controls.Add(btnForceClose);
 
             ModernButton btnClearCache = new() { Text = "🧹 Clear Cache", Width = 125, Margin = new Padding(0, 0, 8, 0) };
             btnClearCache.Click += async (s, e) => await ClearAppCacheAsync();
-            targetButtons.Controls.Add(btnClearCache);
+            targetButtonsRow1.Controls.Add(btnClearCache);
 
-            ModernButton btnOpenFolder = new() { Text = "📂 Open Data Folder", Width = 155, Margin = new Padding(0, 0, 8, 0) };
+            ModernButton btnOpenFolder = new() { Text = "📂 Open Data Folder", Width = 155 };
             btnOpenFolder.Click += (s, e) => OpenDataFolder();
-            targetButtons.Controls.Add(btnOpenFolder);
+            targetButtonsRow1.Controls.Add(btnOpenFolder);
+
+            FlowLayoutPanel targetButtonsRow2 = new()
+            {
+                Location = new Point(15, 116),
+                Size = new Size(920, 36),
+                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
+                WrapContents = false
+            };
+            targetCard.Controls.Add(targetButtonsRow2);
 
             ModernButton btnFolderFix = new() { Text = "📁 Allow Without Admin (Folder Fix)", Width = 260, Margin = new Padding(0, 0, 8, 0) };
             btnFolderFix.Click += async (s, e) => await AllowAppToRunWithoutAdminAsync();
-            targetButtons.Controls.Add(btnFolderFix);
+            targetButtonsRow2.Controls.Add(btnFolderFix);
 
             ModernButton btnGrantPermission = new() { Text = "🔑 Grant User Permission...", Width = 200, Margin = new Padding(0, 0, 8, 0) };
             btnGrantPermission.Click += async (s, e) => await GrantUserPermissionAsync();
-            targetButtons.Controls.Add(btnGrantPermission);
+            targetButtonsRow2.Controls.Add(btnGrantPermission);
 
             ModernButton btnRevokePermission = new() { Text = "🚫 Revoke Permission...", Width = 170 };
             btnRevokePermission.Click += async (s, e) => await RevokeUserPermissionAsync();
-            targetButtons.Controls.Add(btnRevokePermission);
+            targetButtonsRow2.Controls.Add(btnRevokePermission);
 
             // Details Log Console
             Label lblDetails = new()
@@ -250,13 +266,13 @@ namespace ITHelpdeskToolkit.UI.Views
                 Font = new Font("Segoe UI", 12F, FontStyle.Bold),
                 ForeColor = DarkColors.TextMain,
                 AutoSize = true,
-                Location = new Point(0, 425)
+                Location = new Point(0, 500)
             };
             Controls.Add(lblDetails);
 
             _txtDetails = new TextBox
             {
-                Location = new Point(0, 452),
+                Location = new Point(0, 527),
                 Size = new Size(950, 170),
                 Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
                 Multiline = true,

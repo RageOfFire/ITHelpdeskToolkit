@@ -8,7 +8,7 @@ namespace ITHelpdeskToolkit
     /// </summary>
     public static class AppInfo
     {
-        public const string Version = "4.4.0";
+        public const string Version = "4.5.0";
 
         /// <summary>
         /// Base URL for the corporate telemetry API
