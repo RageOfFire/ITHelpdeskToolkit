@@ -92,6 +92,9 @@ namespace ITHelpdeskToolkit.UI.Views
             moreToolsMenu.Items.Add("🔗  Scan Broken Links...", null, async (s, e) => await ScanBrokenLinksDialogAsync());
             moreToolsMenu.Items.Add(new ToolStripSeparator());
             moreToolsMenu.Items.Add("🛟  Open Safe Mode", null, (s, e) => OpenSafeMode());
+            moreToolsMenu.Items.Add(new ToolStripSeparator());
+            // Lives here (not in the fixes grid) on purpose: "Run All Fixes" must never uninstall an update.
+            moreToolsMenu.Items.Add("🚑  Remove Faulty Update + Block It...", null, async (s, e) => await RemoveFaultyUpdateAsync());
 
             _btnMoreTools = new ModernButton
             {
@@ -381,6 +384,146 @@ namespace ITHelpdeskToolkit.UI.Views
                     ok ? "Scan Complete" : "Broken Links Found",
                     MessageBoxButtons.OK, ok ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
             }
+        }
+
+        private async Task RemoveFaultyUpdateAsync()
+        {
+            (string Kb, bool Unblock)? choice = PromptForFaultyUpdate();
+            if (choice == null) return;
+
+            string kb = choice.Value.Kb;
+            bool unblock = choice.Value.Unblock;
+
+            string question = unblock
+                ? $"Let Windows / Microsoft Update offer {kb} again?"
+                : $"This will uninstall {kb} (if it is installed) and hide it so Windows / Microsoft Update does not download it again.\r\n\r\n" +
+                  "Close Excel and all other Office apps first. A restart may be needed to finish.\r\n\r\nContinue?";
+
+            if (MessageBox.Show(question, unblock ? "Unblock Update" : "Remove Faulty Update",
+                    MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
+
+            _btnRunAll.Enabled = false;
+            _btnRunSelected.Enabled = false;
+            _btnMoreTools.Enabled = false;
+            _txtDetails.Text = "Working... approve the Administrator (UAC) prompt if it appears.\r\n" +
+                               "This can take a few minutes while Windows Update is searched and the update is removed.";
+
+            try
+            {
+                var (ok, output) = unblock
+                    ? await OfficeUpdateService.UnblockAsync(kb)
+                    : await OfficeUpdateService.UninstallAndBlockAsync(kb);
+
+                StringBuilder sb = new();
+                sb.AppendLine(unblock ? $"Unblock {kb}" : $"Remove and Block {kb}");
+                sb.AppendLine(new string('=', 60));
+                sb.AppendLine(output);
+                _txtDetails.Text = sb.ToString();
+
+                MessageBox.Show(
+                    ok ? "Done. See Details for what was changed." : "Finished, but not everything succeeded. See Details.",
+                    ok ? "Update Fix Complete" : "Update Fix Incomplete",
+                    MessageBoxButtons.OK, ok ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
+            }
+            finally
+            {
+                _btnRunAll.Enabled = true;
+                _btnRunSelected.Enabled = true;
+                _btnMoreTools.Enabled = true;
+            }
+        }
+
+        /// <summary>Returns the KB number and whether the user chose "Unblock", or null if cancelled.</summary>
+        private static (string Kb, bool Unblock)? PromptForFaultyUpdate()
+        {
+            using Form dlg = new()
+            {
+                Text = "Remove Faulty Update + Block It",
+                StartPosition = FormStartPosition.CenterParent,
+                FormBorderStyle = FormBorderStyle.FixedDialog,
+                MinimizeBox = false,
+                MaximizeBox = false,
+                ClientSize = new Size(480, 235),
+                BackColor = DarkColors.Background
+            };
+
+            Label lbl = new()
+            {
+                Text = "Uninstalls the update below (if installed) and hides it, so Windows / Microsoft Update " +
+                       "will not download it again on this PC. Close Excel and other Office apps first. " +
+                       "Needs Administrator (one UAC prompt).",
+                AutoSize = false,
+                Size = new Size(450, 62),
+                Location = new Point(15, 12),
+                ForeColor = DarkColors.TextMain
+            };
+            dlg.Controls.Add(lbl);
+
+            Label lblKb = new()
+            {
+                Text = "Update KB number:",
+                AutoSize = true,
+                Location = new Point(18, 84),
+                ForeColor = DarkColors.TextMain
+            };
+            dlg.Controls.Add(lblKb);
+
+            TextBox txtKb = new()
+            {
+                Text = OfficeUpdateService.DefaultKb,
+                Location = new Point(18, 106),
+                Size = new Size(190, 26),
+                Font = new Font("Segoe UI", 10F),
+                BackColor = DarkColors.InputBg,
+                ForeColor = DarkColors.TextMain,
+                BorderStyle = BorderStyle.FixedSingle
+            };
+            dlg.Controls.Add(txtKb);
+
+            Label lblHint = new()
+            {
+                Text = "Pre-filled with the update reported to break Excel copy/paste. Any KB number works.",
+                AutoSize = true,
+                Location = new Point(18, 138),
+                ForeColor = DarkColors.TextMuted,
+                Font = new Font("Segoe UI", 8F)
+            };
+            dlg.Controls.Add(lblHint);
+
+            string? kbResult = null;
+            bool unblockResult = false;
+
+            bool TryAccept(bool unblock)
+            {
+                string? kb = OfficeUpdateService.NormalizeKb(txtKb.Text);
+                if (kb == null)
+                {
+                    MessageBox.Show("Enter a KB number such as KB5002914.", "Invalid KB",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return false;
+                }
+                kbResult = kb;
+                unblockResult = unblock;
+                return true;
+            }
+
+            ModernButton btnUninstall = new() { Text = "Uninstall + Block", Width = 150, Location = new Point(18, 185) };
+            btnUninstall.Click += (s, e) => { if (TryAccept(false)) { dlg.DialogResult = DialogResult.OK; dlg.Close(); } };
+            dlg.Controls.Add(btnUninstall);
+
+            ModernButton btnUnblock = new() { Text = "Unblock", Style = ButtonStyle.Secondary, Width = 110, Location = new Point(176, 185) };
+            btnUnblock.Click += (s, e) => { if (TryAccept(true)) { dlg.DialogResult = DialogResult.OK; dlg.Close(); } };
+            dlg.Controls.Add(btnUnblock);
+
+            ModernButton btnCancel = new() { Text = "Cancel", Style = ButtonStyle.Secondary, Width = 100, Location = new Point(294, 185) };
+            btnCancel.Click += (s, e) => { dlg.DialogResult = DialogResult.Cancel; dlg.Close(); };
+            dlg.Controls.Add(btnCancel);
+
+            dlg.AcceptButton = btnUninstall;
+            dlg.CancelButton = btnCancel;
+
+            if (dlg.ShowDialog() != DialogResult.OK || kbResult == null) return null;
+            return (kbResult, unblockResult);
         }
 
         private void GridSelectionChanged(object? sender, EventArgs e)
