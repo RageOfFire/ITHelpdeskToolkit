@@ -12,6 +12,18 @@ one WinForms app, no per-tool scripts to hunt down. Built in C# on .NET 8.
 
 The current version is tracked in one place: [`AppInfo.cs`](AppInfo.cs).
 
+---
+
+### 💼 Work With Me
+
+Enjoying this project or need something custom?
+
+I'm available for freelance work, whether it's **building something new, fixing issues, or improving existing projects**.
+
+[![Hire Me on Fiverr](https://img.shields.io/badge/Hire_Me_on-Fiverr-1DBF73?style=for-the-badge)](https://www.fiverr.com/s/0DDdX0r)
+
+---
+
 ## Tools included
 
 - **Dashboard** — quick-launch buttons and at-a-glance PC info
