@@ -61,6 +61,6 @@ namespace ITHelpdeskToolkit.Models
         public string CollectedVia { get; set; } = "client_hardware_agent_api";
 
         [JsonPropertyName("agentVersion")]
-        public string AgentVersion { get; set; } = "v1.0.0-ithelpdesk-toolkit";
+        public string AgentVersion { get; set; } = "v1.0.0-orbitdesk";
     }
 }

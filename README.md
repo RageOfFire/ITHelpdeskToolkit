@@ -1,4 +1,4 @@
-# IT Helpdesk Toolkit
+# OrbitDesk Toolkit
 
 ![GitHub all releases](https://img.shields.io/github/downloads/RageOfFire/ITHelpdeskToolkit/total)
 ![Discord](https://img.shields.io/discord/752171524919918672)
@@ -68,7 +68,7 @@ Content-Type: application/json
 ```
 
 - `baseUrl` is whatever host/base URL is configured in the app
-  (e.g. `https://helpdesk.example.com`). `TelemetryService.BuildEndpointUrl`
+  (e.g. `https://orbitdesk.example.com`). `TelemetryService.BuildEndpointUrl`
   appends `/api/client-telemetry/collect` automatically unless the
   configured URL already contains that path.
 - No authentication is added by the client — if your endpoint requires
@@ -100,7 +100,7 @@ All fields are sent as a single JSON object (camelCase), built by
 | `networkType` | string | `WI-FI`, `ETHERNET`, `GIGABIT ETHERNET`, or the raw adapter type; `UNKNOWN` if none found |
 | `onlineStatus` | bool | Whether the OS reports network availability |
 | `collectedVia` | string | Always `client_hardware_agent_api` |
-| `agentVersion` | string | e.g. `v1.0.0-ithelpdesk-toolkit`, from [`AppInfo.cs`](AppInfo.cs) |
+| `agentVersion` | string | e.g. `v1.0.0-orbitdesk`, from [`AppInfo.cs`](AppInfo.cs) |
 
 Example payload:
 
@@ -123,7 +123,7 @@ Example payload:
   "networkType": "GIGABIT ETHERNET",
   "onlineStatus": true,
   "collectedVia": "client_hardware_agent_api",
-  "agentVersion": "v1.0.0-ithelpdesk-toolkit"
+  "agentVersion": "v1.0.0-orbitdesk"
 }
 ```
 
@@ -147,7 +147,7 @@ whatever it likes on success (`200 OK` with an empty body is fine).
 TelemetryPayload payload = await TelemetryService.CollectAsync();
 (bool success, string detail) = await TelemetryService.SendTelemetryAsync(
     payload,
-    baseUrl: "https://helpdesk.example.com");
+    baseUrl: "https://orbitdesk.example.com");
 ```
 
 `TelemetryService.ToJsonPreview(payload)` returns a pretty-printed JSON
@@ -209,7 +209,7 @@ UI/
         ExcelView.cs, AppRepairView.cs, PrinterView.cs, PasswordView.cs
 
 Assets/
-    ITHelpdeskToolkit.ico    # app icon (embedded via <ApplicationIcon> in the .csproj)
+    OrbitDesk.ico            # app icon (embedded via <ApplicationIcon> in the .csproj)
 ```
 
 Each `services/*.cs` class is plain C# with no UI dependency, so the
@@ -241,7 +241,7 @@ dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=
 The output will be under:
 
 ```text
-bin\Release\net8.0-windows\win-x64\publish\ITHelpdeskToolkit.exe
+bin\Release\net8.0-windows\win-x64\publish\OrbitDesk.exe
 ```
 
 ## Notes

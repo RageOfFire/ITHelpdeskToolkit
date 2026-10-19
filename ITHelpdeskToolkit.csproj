@@ -6,8 +6,8 @@
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
-    <ApplicationIcon>Assets\ITHelpdeskToolkit.ico</ApplicationIcon>
-    <AssemblyName>ITHelpdeskToolkit</AssemblyName>
+    <ApplicationIcon>Assets\OrbitDesk.ico</ApplicationIcon>
+    <AssemblyName>OrbitDesk</AssemblyName>
     <RootNamespace>ITHelpdeskToolkit</RootNamespace>
     <!-- NPOI bundles the Open Source Media Framework (icon/format metadata); this accepts its EULA. -->
     <AcceptNPOIOSMFLicense>true</AcceptNPOIOSMFLicense>

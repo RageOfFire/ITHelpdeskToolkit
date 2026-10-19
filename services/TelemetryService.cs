@@ -78,7 +78,7 @@ namespace ITHelpdeskToolkit.Services
                     NetworkType = networkType,
                     OnlineStatus = onlineStatus,
                     CollectedVia = "client_hardware_agent_api",
-                    AgentVersion = $"v{AppInfo.Version}-ithelpdesk-toolkit"
+                    AgentVersion = $"v{AppInfo.Version}-orbitdesk"
                 };
             });
         }

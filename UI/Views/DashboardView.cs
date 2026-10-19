@@ -27,7 +27,7 @@ namespace ITHelpdeskToolkit.UI.Views
             Label lblTitle = new()
             {
                 BackColor = Color.Transparent,
-                Text = "IT Helpdesk Toolkit",
+                Text = "OrbitDesk Toolkit",
                 Font = new Font("Segoe UI", 22F, FontStyle.Bold),
                 ForeColor = DarkColors.TextMain,
                 AutoSize = true,
