@@ -4,11 +4,11 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using OrbitDesk.Services;
-using OrbitDesk.UI.Controls;
-using OrbitDesk.UI.Theme;
+using ITHelpdeskToolkit.Services;
+using ITHelpdeskToolkit.UI.Controls;
+using ITHelpdeskToolkit.UI.Theme;
 
-namespace OrbitDesk.UI.Views
+namespace ITHelpdeskToolkit.UI.Views
 {
     public class VirusScanView : UserControl
     {

@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
-using OrbitDesk.Models;
+using ITHelpdeskToolkit.Models;
 
-namespace OrbitDesk.Services
+namespace ITHelpdeskToolkit.Services
 {
     public static class CleanupService
     {

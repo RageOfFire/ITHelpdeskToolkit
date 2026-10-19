@@ -2,12 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
-using OrbitDesk.Services;
-using OrbitDesk.UI.Controls;
-using OrbitDesk.UI.Theme;
-using OrbitDesk.UI.Views;
+using ITHelpdeskToolkit.Services;
+using ITHelpdeskToolkit.UI.Controls;
+using ITHelpdeskToolkit.UI.Theme;
+using ITHelpdeskToolkit.UI.Views;
 
-namespace OrbitDesk.UI
+namespace ITHelpdeskToolkit.UI
 {
     public class MainForm : Form
     {
@@ -28,7 +28,7 @@ namespace OrbitDesk.UI
 
         public MainForm()
         {
-            Text = $"OrbitDesk Toolkit v{AppInfo.Version}";
+            Text = $"IT Helpdesk Toolkit v{AppInfo.Version}";
             Size = new Size(1220, 800);
             MinimumSize = new Size(1020, 680);
             StartPosition = FormStartPosition.CenterScreen;
@@ -242,7 +242,7 @@ namespace OrbitDesk.UI
             Label lblAppTitle = new()
             {
                 BackColor = Color.Transparent,
-                Text = "OrbitDesk Toolkit",
+                Text = "IT HELPDESK",
                 Font = new Font("Segoe UI", 14F, FontStyle.Bold),
                 ForeColor = DarkColors.TextMain,
                 Dock = DockStyle.Top,
@@ -254,7 +254,7 @@ namespace OrbitDesk.UI
             Label lblSubTitle = new()
             {
                 BackColor = Color.Transparent,
-                Text = $"v{AppInfo.Version} · IT Support",
+                Text = $"TOOLKIT v{AppInfo.Version}",
                 Font = new Font("Segoe UI", 9F, FontStyle.Bold),
                 ForeColor = DarkColors.Primary,
                 Dock = DockStyle.Top,

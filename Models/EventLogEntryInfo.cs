@@ -1,6 +1,6 @@
 using System;
 
-namespace OrbitDesk.Models
+namespace ITHelpdeskToolkit.Models
 {
     public class EventLogEntryInfo
     {

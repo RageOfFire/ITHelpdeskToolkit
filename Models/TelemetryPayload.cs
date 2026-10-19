@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace OrbitDesk.Models
+namespace ITHelpdeskToolkit.Models
 {
     /// <summary>
     /// Matches the JSON body expected by POST /api/client-telemetry/collect.
@@ -61,6 +61,6 @@ namespace OrbitDesk.Models
         public string CollectedVia { get; set; } = "client_hardware_agent_api";
 
         [JsonPropertyName("agentVersion")]
-        public string AgentVersion { get; set; } = "v1.0.0-orbitdesk";
+        public string AgentVersion { get; set; } = "v1.0.0-ithelpdesk-toolkit";
     }
 }

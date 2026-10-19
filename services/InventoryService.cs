@@ -6,9 +6,9 @@ using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
-using OrbitDesk.Models;
+using ITHelpdeskToolkit.Models;
 
-namespace OrbitDesk.Services
+namespace ITHelpdeskToolkit.Services
 {
     public static class InventoryService
     {

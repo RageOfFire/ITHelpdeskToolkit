@@ -2,11 +2,11 @@ using System;
 using System.Drawing;
 using System.Net;
 using System.Windows.Forms;
-using OrbitDesk.Services;
-using OrbitDesk.UI.Controls;
-using OrbitDesk.UI.Theme;
+using ITHelpdeskToolkit.Services;
+using ITHelpdeskToolkit.UI.Controls;
+using ITHelpdeskToolkit.UI.Theme;
 
-namespace OrbitDesk.UI.Views
+namespace ITHelpdeskToolkit.UI.Views
 {
     public class DashboardView : UserControl
     {
@@ -27,7 +27,7 @@ namespace OrbitDesk.UI.Views
             Label lblTitle = new()
             {
                 BackColor = Color.Transparent,
-                Text = "OrbitDesk Toolkit",
+                Text = "IT Helpdesk Toolkit",
                 Font = new Font("Segoe UI", 22F, FontStyle.Bold),
                 ForeColor = DarkColors.TextMain,
                 AutoSize = true,

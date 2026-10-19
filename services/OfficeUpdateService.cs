@@ -4,7 +4,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace OrbitDesk.Services
+namespace ITHelpdeskToolkit.Services
 {
     /// <summary>
     /// Removes a specific faulty update (by KB number) and blocks it from being offered again.

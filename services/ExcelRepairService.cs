@@ -7,12 +7,12 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Win32;
-using OrbitDesk.Models;
+using ITHelpdeskToolkit.Models;
 using NPOI.SS.UserModel;
 using NPOI.SS.Util;
 using NPOI.XSSF.UserModel;
 
-namespace OrbitDesk.Services
+namespace ITHelpdeskToolkit.Services
 {
     /// <summary>
     /// Engine used to convert legacy .xls workbooks to .xlsx. Both engines run fully locally and

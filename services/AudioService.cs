@@ -4,9 +4,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
-using OrbitDesk.Models;
+using ITHelpdeskToolkit.Models;
 
-namespace OrbitDesk.Services
+namespace ITHelpdeskToolkit.Services
 {
     /// <summary>
     /// Advanced audio/microphone repairs. The four grid actions run through PowerShell (elevated where
