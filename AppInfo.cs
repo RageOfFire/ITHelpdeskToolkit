@@ -1,4 +1,4 @@
-namespace ITHelpdeskToolkit
+namespace OrbitDesk
 {
     /// <summary>
     /// Single source of truth for the app's version number. Change VERSION
@@ -8,7 +8,7 @@ namespace ITHelpdeskToolkit
     /// </summary>
     public static class AppInfo
     {
-        public const string Version = "4.7.0";
+        public const string Version = "5.0.0";
 
         /// <summary>
         /// Base URL for the corporate telemetry API

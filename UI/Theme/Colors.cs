@@ -1,7 +1,7 @@
 using System;
 using System.Drawing;
 
-namespace ITHelpdeskToolkit.UI.Theme
+namespace OrbitDesk.UI.Theme
 {
     public enum ThemeMode
     {

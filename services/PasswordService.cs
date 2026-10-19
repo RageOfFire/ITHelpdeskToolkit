@@ -2,7 +2,7 @@ using System;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace ITHelpdeskToolkit.Services
+namespace OrbitDesk.Services
 {
     public static class PasswordService
     {

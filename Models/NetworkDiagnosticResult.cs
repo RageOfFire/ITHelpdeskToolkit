@@ -1,4 +1,4 @@
-namespace ITHelpdeskToolkit.Models
+namespace OrbitDesk.Models
 {
     public class NetworkDiagnosticResult
     {

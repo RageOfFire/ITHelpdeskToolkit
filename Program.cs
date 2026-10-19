@@ -1,8 +1,8 @@
 using System;
 using System.Windows.Forms;
-using ITHelpdeskToolkit.UI;
+using OrbitDesk.UI;
 
-namespace ITHelpdeskToolkit
+namespace OrbitDesk
 {
     internal static class Program
     {

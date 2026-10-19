@@ -2,9 +2,9 @@ using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
-using ITHelpdeskToolkit.UI.Theme;
+using OrbitDesk.UI.Theme;
 
-namespace ITHelpdeskToolkit.UI.Controls
+namespace OrbitDesk.UI.Controls
 {
     public enum ButtonStyle
     {

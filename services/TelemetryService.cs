@@ -7,10 +7,10 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using ITHelpdeskToolkit.Models;
-using AppInfo = ITHelpdeskToolkit.AppInfo;
+using OrbitDesk.Models;
+using AppInfo = OrbitDesk.AppInfo;
 
-namespace ITHelpdeskToolkit.Services
+namespace OrbitDesk.Services
 {
     /// <summary>
     /// Collects machine hardware telemetry (mirroring InventoryService's
@@ -78,7 +78,7 @@ namespace ITHelpdeskToolkit.Services
                     NetworkType = networkType,
                     OnlineStatus = onlineStatus,
                     CollectedVia = "client_hardware_agent_api",
-                    AgentVersion = $"v{AppInfo.Version}-ithelpdesk-toolkit"
+                    AgentVersion = $"v{AppInfo.Version}-orbitdesk"
                 };
             });
         }

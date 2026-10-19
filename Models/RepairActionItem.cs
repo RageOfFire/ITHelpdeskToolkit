@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
 
-namespace ITHelpdeskToolkit.Models
+namespace OrbitDesk.Models
 {
     public enum RepairStatus
     {

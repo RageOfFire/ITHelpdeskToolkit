@@ -8,7 +8,7 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace ITHelpdeskToolkit.Services
+namespace OrbitDesk.Services
 {
     public static class VirusScanService
     {
@@ -95,7 +95,7 @@ namespace ITHelpdeskToolkit.Services
 
         private static string ApiKeyConfigPath => Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "ITHelpdeskToolkit", "vt_apikey.txt");
+            "OrbitDesk", "vt_apikey.txt");
 
         public static string LoadSavedApiKey()
         {

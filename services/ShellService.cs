@@ -5,7 +5,7 @@ using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ITHelpdeskToolkit.Services
+namespace OrbitDesk.Services
 {
     public static class ShellService
     {

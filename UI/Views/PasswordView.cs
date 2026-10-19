@@ -1,11 +1,11 @@
 using System;
 using System.Drawing;
 using System.Windows.Forms;
-using ITHelpdeskToolkit.Services;
-using ITHelpdeskToolkit.UI.Controls;
-using ITHelpdeskToolkit.UI.Theme;
+using OrbitDesk.Services;
+using OrbitDesk.UI.Controls;
+using OrbitDesk.UI.Theme;
 
-namespace ITHelpdeskToolkit.UI.Views
+namespace OrbitDesk.UI.Views
 {
     public class PasswordView : UserControl
     {

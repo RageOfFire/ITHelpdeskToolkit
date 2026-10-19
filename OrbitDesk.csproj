@@ -6,9 +6,11 @@
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
-    <ApplicationIcon>Assets\ITHelpdeskToolkit.ico</ApplicationIcon>
-    <AssemblyName>ITHelpdeskToolkit</AssemblyName>
-    <RootNamespace>ITHelpdeskToolkit</RootNamespace>
+    <ApplicationIcon>Assets\OrbitDesk.ico</ApplicationIcon>
+    <AssemblyName>OrbitDesk</AssemblyName>
+    <Product>OrbitDesk Toolkit</Product>
+    <Company>Orbital Tech</Company>
+    <RootNamespace>OrbitDesk</RootNamespace>
     <!-- NPOI bundles the Open Source Media Framework (icon/format metadata); this accepts its EULA. -->
     <AcceptNPOIOSMFLicense>true</AcceptNPOIOSMFLicense>
   </PropertyGroup>
@@ -19,6 +21,12 @@
     <PackageReference Include="System.Diagnostics.EventLog" Version="8.0.0" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="NPOI" Version="2.8.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Assets\OrbitDesk_Logo.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

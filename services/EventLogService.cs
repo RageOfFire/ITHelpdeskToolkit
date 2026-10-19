@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.Eventing.Reader;
 using System.Threading.Tasks;
-using ITHelpdeskToolkit.Models;
+using OrbitDesk.Models;
 
-namespace ITHelpdeskToolkit.Services
+namespace OrbitDesk.Services
 {
     public static class EventLogService
     {

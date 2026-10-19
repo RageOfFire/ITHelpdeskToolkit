@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using ITHelpdeskToolkit.Models;
-using ITHelpdeskToolkit.Services;
-using ITHelpdeskToolkit.UI.Controls;
-using ITHelpdeskToolkit.UI.Theme;
+using OrbitDesk.Models;
+using OrbitDesk.Services;
+using OrbitDesk.UI.Controls;
+using OrbitDesk.UI.Theme;
 
-namespace ITHelpdeskToolkit.UI.Views
+namespace OrbitDesk.UI.Views
 {
     public class EventLogView : UserControl
     {
