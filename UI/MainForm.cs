@@ -299,7 +299,8 @@ namespace ITHelpdeskToolkit.UI
                 ("virus_scan", "🛡 Virus Scan"),
                 ("apps", "📦 Application Fixes"),
                 ("printer", "🖨 Printer Fixes"),
-                ("password", "🔐 Password Generator")
+                ("password", "🔐 Password Generator"),
+                ("license", "🔑 License Checker")
             };
 
             // Positioned explicitly (Location/Size) rather than Dock=Top.
@@ -372,6 +373,7 @@ namespace ITHelpdeskToolkit.UI
                 "apps" => new AppRepairView(),
                 "printer" => new PrinterView(),
                 "password" => new PasswordView(),
+                "license"  => new LicenseCheckerView(),
                 _ => CreateDashboardView()
             };
 
