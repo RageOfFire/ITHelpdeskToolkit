@@ -1,9 +1,8 @@
-name: Build ITHelpdeskToolkit
+name: Build OrbitDesk Toolkit
 
 on:
-  push:
-    branches: [ main, master ]
-    tags: [ 'v*.*.*' ]
+  release:
+    types: [ published ]
   workflow_dispatch:
     inputs:
       create_release:
@@ -46,7 +45,7 @@ jobs:
 
       - name: Publish (${{ matrix.mode }})
         run: >
-          dotnet publish ITHelpdeskToolkit.csproj
+          dotnet publish OrbitDesk.csproj
           -c Release -r win-x64
           --self-contained ${{ matrix.self-contained }}
           -p:Version=${{ steps.version.outputs.version }}
@@ -55,7 +54,7 @@ jobs:
       - name: Zip published output
         shell: pwsh
         run: |
-          $zipName = "ITHelpDeskToolkit_${{ steps.version.outputs.version }}_${{ matrix.artifact-suffix }}.zip"
+          $zipName = "OrbitDesk_Toolkit_${{ steps.version.outputs.version }}_${{ matrix.artifact-suffix }}.zip"
           Compress-Archive -Path publish\* -DestinationPath $zipName
           echo "ZIP_NAME=$zipName" >> $env:GITHUB_ENV
 
