@@ -45,7 +45,7 @@ jobs:
 
       - name: Publish (${{ matrix.mode }})
         run: >
-          dotnet publish OrbitDesk.csproj
+          dotnet publish ITHelpdeskToolkit.csproj
           -c Release -r win-x64
           --self-contained ${{ matrix.self-contained }}
           -p:Version=${{ steps.version.outputs.version }}
