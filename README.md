@@ -47,6 +47,10 @@ I'm available for freelance work, whether it's **building something new, fixing 
 - **Device Telemetry** — collects hardware/OS/network telemetry and POSTs it
   to a configurable corporate telemetry endpoint (see
   [Telemetry API](#telemetry-api) below)
+- **License Checker** — detects Windows activation status (WMI) and product
+  key (decoded from firmware/registry), detects Office version and activation
+  via `OSPP.VBS /dstatus`; colour-coded badge: Activated / Not Activated /
+  Notification / Expired
 
 Most repair actions run in a background thread so the UI stays responsive,
 and elevate via a UAC prompt automatically when administrator rights are
@@ -177,7 +181,7 @@ hitting "Send".
 ```text
 Program.cs                  # entry point
 AppInfo.cs                  # single source of truth for the app version
-ITHelpdeskToolkit.csproj    # project file (net8.0-windows, WinForms)
+OrbitDesk.csproj            # project file (net8.0-windows, WinForms)
 
 Models/                     # plain data types shared across services/views
     InventoryItem.cs
@@ -198,6 +202,7 @@ services/                   # backend logic — no UI dependency, pure Windows c
     AppRepairService.cs        # general app fixes + targeted-app tools
     PasswordService.cs         # password generation
     TelemetryService.cs        # collects + POSTs device telemetry (see Telemetry API)
+    LicenseService.cs          # Windows key decode + WMI activation; Office OSPP check
 
 UI/
     MainForm.cs              # window shell: sidebar, top bar, view host, theming
@@ -206,10 +211,12 @@ UI/
     Views/                    # one UserControl per sidebar page
         DashboardView.cs, InventoryView.cs, NetworkView.cs,
         NetworkRepairView.cs, SystemRepairView.cs, CleanupView.cs,
-        ExcelView.cs, AppRepairView.cs, PrinterView.cs, PasswordView.cs
+        ExcelView.cs, AppRepairView.cs, PrinterView.cs, PasswordView.cs,
+        LicenseCheckerView.cs  # Windows + Office license status and key display
 
 Assets/
     OrbitDesk.ico            # app icon (embedded via <ApplicationIcon> in the .csproj)
+    OrbitDesk_Logo.png       # source logo asset
 ```
 
 Each `services/*.cs` class is plain C# with no UI dependency, so the
@@ -251,3 +258,8 @@ bin\Release\net8.0-windows\win-x64\publish\OrbitDesk.exe
   administrator privileges and will trigger a UAC prompt.
 - The application is intended for authorized IT support and
   asset-management use.
+- The GitHub Actions workflow (`dotnet-desktop.yml`) only triggers on a
+  published GitHub Release (or manual `workflow_dispatch`) — not on every
+  commit. To cut a release: create and publish a Release on GitHub with a
+  `v*.*.*` tag; the workflow will build both a self-contained (`full`) and
+  framework-dependent (`lite`) zip automatically.
