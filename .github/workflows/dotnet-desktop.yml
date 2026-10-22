@@ -50,6 +50,7 @@ jobs:
           --self-contained ${{ matrix.self-contained }}
           -p:Version=${{ steps.version.outputs.version }}
           -o publish
+          -v:diag
 
       - name: Zip published output
         shell: pwsh
